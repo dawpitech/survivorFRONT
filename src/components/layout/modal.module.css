@@ -1,0 +1,16 @@
+.login {
+   display: flex;
+    margin: 2rem;
+}
+
+.loginInput {
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.inputField {
+    flex: auto;
+}
