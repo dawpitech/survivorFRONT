@@ -75,7 +75,7 @@ export default function NavBar() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <LoginModal text="sign in" />
+          <LoginModal text="Sign in" />
         </div>
 
         <div className="flex items-center gap-3 md:hidden">
@@ -117,10 +117,7 @@ export default function NavBar() {
               {link.name}
             </a>
           ))}
-
-          <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-            Login
-          </button>
+          <LoginModal text="Sign in" />
         </div>
       </nav>
     </div>

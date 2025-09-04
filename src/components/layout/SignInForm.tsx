@@ -26,7 +26,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6 w-24rem", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Sign in to your account</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>
@@ -58,7 +58,7 @@ export function LoginForm({
                   Forgot your password?
                 </a>
                 <Button type="submit" className="w-full">
-                  Login
+                  Sign In
                 </Button>
               </div>
             </div>
