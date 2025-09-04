@@ -11,33 +11,33 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { handleSubmit } from "@/lib/auth";
+import { handleSubmitSignIn } from "@/lib/auth";
 
-type SignUpFormProps = React.ComponentProps<"div"> & {
+type LoginFormProps = React.ComponentProps<"div"> & {
   onToggleMode: () => void;
 };
 
-export function SignUpForm({
+export function LoginForm({
   className,
   onToggleMode,
   ...props
-}: SignUpFormProps) {
+}: LoginFormProps) {
   return (
     <div className={cn("flex flex-col gap-6 w-24rem", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+          <CardTitle>Login to your account</CardTitle>
           <CardDescription>
-            Enter your email below to create your account
+            Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmitSignIn}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="signup-email"
+                  id="email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -46,20 +46,26 @@ export function SignUpForm({
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="password">Password</Label>
                 </div>
-                <Input id="signup-password" type="password" required name="password" />
+                <Input id="password" type="password" required name="password" />
               </div>
               <div className="flex flex-col gap-3">
+                <a
+                  href="#"
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Forgot your password?
+                </a>
                 <Button type="submit" className="w-full">
-                  Create Account
+                  Login
                 </Button>
               </div>
             </div>
             <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Button variant="link" onClick={onToggleMode} type="button">
-                Sign in
+                Sign up
               </Button>
             </div>
           </form>

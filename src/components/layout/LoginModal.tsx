@@ -5,8 +5,8 @@ import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
 import { Button } from "@mui/material";
 
-import { LoginForm } from "./LoginForm";
-import { SignUpForm } from "./signUp";
+import { LoginForm } from "./SignInForm";
+import { SignUpForm } from "./SignUpForm";
 
 type ModalProps = {
   text: string;
