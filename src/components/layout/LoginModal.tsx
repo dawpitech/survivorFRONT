@@ -3,7 +3,7 @@ import Backdrop from "@mui/material/Backdrop";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import Fade from "@mui/material/Fade";
-import { Button } from "@mui/material";
+import { Button } from "@/components/ui/button";
 
 import { LoginForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
@@ -33,7 +33,7 @@ export default function LoginModal({ text }: ModalProps) {
 
   return (
     <div>
-      <Button variant="contained" onClick={handleOpen}>
+      <Button variant={"blue"} onClick={handleOpen} color="#CAF0F8">
         {text}
       </Button>
       <Modal

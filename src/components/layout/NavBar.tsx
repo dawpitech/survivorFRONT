@@ -28,7 +28,7 @@ export default function NavBar() {
     <div ref={ref} className="h-32 overflow-y-scroll">
       <p className="w-10 h-[500px]"></p>
       <nav
-        className={`fixed top-0 left-0 bg-indigo-500 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}
+        className={`fixed top-0 left-0 bg-[#023E8A] w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}
       >
         <a href="https://prebuiltui.com" className="flex items-center gap-2">
           <img
@@ -38,12 +38,12 @@ export default function NavBar() {
           />
         </a>
 
-        <div className="hidden md:flex items-center gap-4 lg:gap-8">
+        <div className="hidden font-[Montserrat] md:flex items-center gap-4 lg:gap-8">
           {navLinks.map((link, i) => (
             <a
               key={i}
               href={link.path}
-              className={`group flex flex-col font gap-0.5 text-xl ${isScrolled ? "text-gray-700" : "text-white"}`}
+              className={`group flex flex-col font gap-0.5 text-xl ${isScrolled ? "text-[#ADE8F4]" : "text-[#ADE8F4]"}`}
             >
               {link.name}
               <div
@@ -51,16 +51,11 @@ export default function NavBar() {
               />
             </a>
           ))}
-          <button
-            className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? "text-black" : "text-white"} transition-all`}
-          >
-            New Launch
-          </button>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
           <svg
-            className={`h-6 w-6 text-white transition-all duration-500 ${isScrolled ? "invert" : ""}`}
+            className={`h-6 w-6 text-[#000000] transition-all duration-500 ${isScrolled ? "invert" : ""}`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -69,13 +64,13 @@ export default function NavBar() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-            <LoginModal text="sign up" />
+            <LoginModal text="sign in" />
         </div>
 
         <div className="flex items-center gap-3 md:hidden">
           <svg
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`h-6 w-6 cursor-pointer ${isScrolled ? "invert" : ""}`}
+            className={`h-6 w-6 text-[#000000] cursor-pointer ${isScrolled ? "invert" : ""}`}
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -111,10 +106,6 @@ export default function NavBar() {
               {link.name}
             </a>
           ))}
-
-          <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
-            New Launch
-          </button>
 
           <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
             Login
