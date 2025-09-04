@@ -11,17 +11,28 @@ export default function NavBar() {
     { name: "About", path: "/" },
   ];
 
-  const ref = React.useRef(null);
+  const ref = React.useRef<HTMLDivElement>(null);
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(ref.current.scrollTop > 10);
+      if (ref.current) {
+        setIsScrolled(ref.current.scrollTop > 10);
+      }
     };
-    ref.current.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      currentRef.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, []);
 
   return (
@@ -64,7 +75,7 @@ export default function NavBar() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-            <LoginModal text="sign in" />
+          <LoginModal text="sign in" />
         </div>
 
         <div className="flex items-center gap-3 md:hidden">
