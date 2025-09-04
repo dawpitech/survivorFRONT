@@ -1,6 +1,7 @@
 "use client";
 
 import {apiClient} from "@/lib/api";
+import { getUserInformation } from "./user";
 
 export async function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,6 +22,7 @@ export async function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
         }
 
         window.location.href = "/dashboard";
+        getUserInformation();
     } catch (err) {
         console.error("Login failed:", err);
     }
