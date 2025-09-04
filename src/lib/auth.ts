@@ -1,28 +1,46 @@
 "use client";
 
-export function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
+import {apiClient} from "@/lib/api";
+
+export async function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const data = new FormData(e.currentTarget);
-    const email = data.get("email");
-    const password = data.get("password");
+    const email = data.get("email") as string;
+    const password = data.get("password") as string;
 
-    console.log(email);
-    console.log(password);
+    try {
+        const response = await apiClient.post(
+            "/auth/login",
+            JSON.stringify({ email, password })
+        );
+        console.log("Login success:", response);
+
+        if (response.token) {
+            localStorage.setItem("token", response.token);
+        }
+
+        window.location.href = "/dashboard";
+    } catch (err) {
+        console.error("Login failed:", err);
+    }
 }
 
-export function handleSubmitSignUp(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
+export async function handleSubmitSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const data = new FormData(e.currentTarget);
-    const email = data.get("email");
-    const password = data.get("password");
+    const email = data.get("email") as string;
+    const password = data.get("password") as string;
 
-    console.log(email);
-    console.log(password);
-}
+    try {
+        const response = await apiClient.post(
+            "/auth/signup",
+            JSON.stringify({ email, password })
+        );
+        console.log("Sign-up success:", response);
 
-export default function Login() {
+    } catch (err) {
+        console.error("Sign-up failed:", err);
+    }
 }
