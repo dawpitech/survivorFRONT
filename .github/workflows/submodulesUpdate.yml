@@ -1,0 +1,19 @@
+#file: noinspection SpellCheckingInspection
+name: Checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  trigger-submodules-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Main Repository CI/CD
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.PAT_SURVIVOR }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            https://api.github.com/repos/dawpitech/survivor/dispatches \
+            -d '{"event_type": "update_submodule"}'
