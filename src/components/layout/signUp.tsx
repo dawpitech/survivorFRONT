@@ -13,31 +13,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { handleSubmit } from "@/lib/auth";
 
-type LoginFormProps = React.ComponentProps<"div"> & {
+type SignUpFormProps = React.ComponentProps<"div"> & {
   onToggleMode: () => void;
 };
 
-export function LoginForm({
+export function SignUpForm({
   className,
   onToggleMode,
   ...props
-}: LoginFormProps) {
+}: SignUpFormProps) {
   return (
     <div className={cn("flex flex-col gap-6 w-24rem", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
+          <CardTitle>Create an account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="signup-email">Email</Label>
                 <Input
-                  id="email"
+                  id="signup-email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -46,26 +46,20 @@ export function LoginForm({
               </div>
               <div className="grid gap-3">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signup-password">Password</Label>
                 </div>
-                <Input id="password" type="password" required name="password" />
+                <Input id="signup-password" type="password" required name="password" />
               </div>
               <div className="flex flex-col gap-3">
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
                 <Button type="submit" className="w-full">
-                  Login
+                  Create Account
                 </Button>
               </div>
             </div>
             <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
+              Already have an account?{" "}
               <Button variant="link" onClick={onToggleMode} type="button">
-                Sign up
+                Sign in
               </Button>
             </div>
           </form>
