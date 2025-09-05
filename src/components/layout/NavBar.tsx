@@ -116,8 +116,8 @@ export default function NavBar() {
                 </div>
               </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
-                    <DropdownMenuItem onSelect={() => router.push("/profile")}>Profile</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => window.location.href = "/profile"}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => window.location.href = "/dashboard"}>Dashboard</DropdownMenuItem>
                     <DropdownMenuItem onSelect={handlelogout}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
