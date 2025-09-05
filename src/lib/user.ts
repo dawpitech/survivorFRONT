@@ -7,6 +7,7 @@ export async function getUserInformation() {
     const response = await apiClient.get("/user/me");
 
     console.log("Information", response);
+    localStorage.setItem("uuid", response.uuid);
     return response;
   } catch (err) {
     console.error("Sign-up failed:", err);
@@ -27,7 +28,7 @@ export async function updateUserInformation(
   const email = data.get("email") as string;
   const pwd = data.get("password") as string;
   const name = data.get("name") as string;
-  const id = localStorage.getItem("id");
+  const id = localStorage.getItem("uuid");
 
   const updateData: UpdateUserData = {};
 
@@ -45,12 +46,12 @@ export async function updateUserInformation(
 
   try {
     const response = await apiClient.patch(
-      `/users/${id}`,
+      `/user/${id}`,
       JSON.stringify(updateData),
     );
     console.log("Information", response);
   } catch (err) {
-    console.error("Sign-up failed:", err);
+    console.error("Get user failed:", err);
   }
 }
 

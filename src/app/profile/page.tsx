@@ -3,6 +3,7 @@
 import "../globals.css";
 import NavBar from "@/components/layout/NavBar";
 import {getUserInformation} from "@/lib/user";
+import {updateUserInformation} from "@/lib/user";
 
 import { FC, useEffect, useState } from "react";
 import { X, Pencil } from "lucide-react";
@@ -13,6 +14,8 @@ interface UserInfo {
 
 const ProfileCard: FC = () => {
     const [user, setUser] = useState<UserInfo | null>(null);
+    const [editName, setEditName] = useState(false);
+    const [editEmail, setEditEmail] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -21,20 +24,30 @@ const ProfileCard: FC = () => {
         })();
     }, []);
 
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        await updateUserInformation(e);
+        const updatedData = await getUserInformation();
+        setUser(updatedData);
+        setEditName(false);
+        setEditEmail(false);
+    };
+
     if (!user) {
         return <p className="text-center text-gray-500">Loading...</p>;
     }
-    localStorage.setItem("uuid", user.uuid);
 
     return (
         <div className="w-full max-w-md mx-auto rounded-2xl shadow-lg border p-8 bg-white">
+            {/* Header with avatar + close */}
             <div className="flex justify-between items-start">
                 <div className="flex gap-5">
                     <div className="relative">
                         <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
                             <span className="text-gray-500 text-3xl">👤</span>
                         </div>
-                        <button className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow">
+                        {/* Pencil for profile picture (kept separate) */}
+                        <button type="button" className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow">
                             <Pencil size={16} className="text-gray-600" />
                         </button>
                     </div>
@@ -48,26 +61,80 @@ const ProfileCard: FC = () => {
                 </button>
             </div>
 
+            {/* Divider */}
             <hr className="my-6" />
 
-            <div className="space-y-5">
-                <div className="flex justify-between text-base">
-                    <span className="text-gray-500">Name</span>
-                    <span className="text-gray-800">{user.name}</span>
+            {/* Info form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name field */}
+                <div className="flex justify-between items-center text-base">
+                    <label className="text-gray-500" htmlFor="name">
+                        Name
+                    </label>
+                    <div className="flex items-center gap-2">
+                        {editName ? (
+                            <input
+                                id="name"
+                                name="name"
+                                defaultValue={user.name}
+                                className="border rounded px-2 py-1 text-gray-800"
+                            />
+                        ) : (
+                            <span className="text-gray-800">{user.name}</span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setEditName(!editName)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                            <Pencil size={16} className="text-gray-600" />
+                        </button>
+                    </div>
                 </div>
-                <div className="flex justify-between text-base">
-                    <span className="text-gray-500">Email</span>
-                    <span className="text-gray-800">{user.email}</span>
+
+                {/* Email field */}
+                <div className="flex justify-between items-center text-base">
+                    <label className="text-gray-500" htmlFor="email">
+                        Email
+                    </label>
+                    <div className="flex items-center gap-2">
+                        {editEmail ? (
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                defaultValue={user.email}
+                                className="border rounded px-2 py-1 text-gray-800"
+                            />
+                        ) : (
+                            <span className="text-gray-800">{user.email}</span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => setEditEmail(!editEmail)}
+                            className="p-1 rounded-full hover:bg-gray-100"
+                        >
+                            <Pencil size={16} className="text-gray-600" />
+                        </button>
+                    </div>
                 </div>
+
+                {/* Role field (read-only) */}
                 <div className="flex justify-between text-base">
                     <span className="text-gray-500">Role</span>
                     <span className="text-gray-800">{user.role}</span>
                 </div>
-            </div>
 
-            <button className="mt-8 w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium text-base">
-                Save Change
-            </button>
+                {/* Save button if any field is being edited */}
+                {(editName || editEmail) && (
+                    <button
+                        type="submit"
+                        className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium text-base"
+                    >
+                        Save Changes
+                    </button>
+                )}
+            </form>
         </div>
     );
 };
