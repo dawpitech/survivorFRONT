@@ -7,8 +7,10 @@ export async function getUserInformation() {
     const response = await apiClient.get("/user/me");
 
     console.log("Information", response);
+    return response;
   } catch (err) {
     console.error("Sign-up failed:", err);
+    return "";
   }
 }
 
