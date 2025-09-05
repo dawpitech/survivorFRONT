@@ -14,14 +14,39 @@ export async function getUserInformation() {
   }
 }
 
-export async function updateUserInformation() {
+interface UpdateUserData {
+  email?: string;
+  password?: string;
+  name?: string;
+}
+
+export async function updateUserInformation(
+  e: React.FormEvent<HTMLFormElement>,
+) {
+  const data = new FormData(e.currentTarget);
+  const email = data.get("email") as string;
+  const pwd = data.get("password") as string;
+  const name = data.get("name") as string;
   const id = localStorage.getItem("id");
-  const email = "email";
-  const pwd = "UserName";
+
+  const updateData: UpdateUserData = {};
+
+  if (email && email.trim() !== "") {
+    updateData.email = email;
+  }
+
+  if (pwd && pwd.trim() !== "") {
+    updateData.password = pwd;
+  }
+
+  if (name && name.trim() !== "") {
+    updateData.name = name;
+  }
+
   try {
     const response = await apiClient.patch(
       `/users/:${id}`,
-      JSON.stringify({ email, pwd }),
+      JSON.stringify(updateData),
     );
     console.log("Information", response);
   } catch (err) {
