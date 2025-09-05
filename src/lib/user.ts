@@ -45,7 +45,7 @@ export async function updateUserInformation(
 
   try {
     const response = await apiClient.patch(
-      `/users/:${id}`,
+      `/users/${id}`,
       JSON.stringify(updateData),
     );
     console.log("Information", response);

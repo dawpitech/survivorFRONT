@@ -24,6 +24,7 @@ const ProfileCard: FC = () => {
     if (!user) {
         return <p className="text-center text-gray-500">Loading...</p>;
     }
+    localStorage.setItem("uuid", user.uuid);
 
     return (
         <div className="w-full max-w-md mx-auto rounded-2xl shadow-lg border p-8 bg-white">
