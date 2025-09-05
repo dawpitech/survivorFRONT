@@ -11,6 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function handlelogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("uuid");
+    window.location.href = "/";
+}
+
 export default function NavBar() {
   const navLinks = [
     { name: "Home", path: "/" },
@@ -109,11 +115,11 @@ export default function NavBar() {
                   <span className="text-gray-500 text-xl">👤</span>
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Dashboard</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
+                <DropdownMenuContent className="w-56">
+                    <DropdownMenuItem onSelect={() => router.push("/profile")}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={handlelogout}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
