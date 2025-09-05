@@ -9,18 +9,15 @@ export default function ProjectPage() {
   const [projectName, setProjectName] = useState("");
 
   const projects = [
-    { name: "Home", description: "descript 1", image: "/project.jpeg" },
-    { name: "Projects", description: "/projects", image: "/project.jpeg" },
-    { name: "Contact", description: "tes", image: "/project.jpeg" },
-    { name: "About", description: "eret", image: "/project.jpeg" },
-    { name: "Home", description: "descript 1", image: "/project.jpeg" },
-    { name: "Projects", description: "/projects", image: "/project.jpeg" },
-    { name: "Contact", description: "tes", image: "/project.jpeg" },
-    { name: "About", description: "eret", image: "/project.jpeg" },
-    { name: "Home", description: "descript 1", image: "/project.jpeg" },
-    { name: "Projects", description: "/projects", image: "/project.jpeg" },
-    { name: "Contact", description: "tes", image: "/project.jpeg" },
-    { name: "About", description: "eret", image: "/project.jpeg" },
+    { name: "New partner" , description: "New startup", image: "/project.jpeg" },
+    { name: "Future", description: "Future is Future", image: "/project.jpeg" },
+    { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
+    { name: "New partner" , description: "New startup", image: "/project.jpeg" },
+    { name: "Future", description: "Future is Future", image: "/project.jpeg" },
+    { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
+    { name: "New partner" , description: "New startup", image: "/project.jpeg" },
+    { name: "Future", description: "Future is Future", image: "/project.jpeg" },
+    { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
   ];
 
   const filteredProjects = projects.filter((proj) =>
