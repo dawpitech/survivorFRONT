@@ -20,7 +20,8 @@ export async function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
             localStorage.setItem("token", response.token);
         }
 
-        window.location.href = "/dashboard";
+        window.location.href = "/profile";
+
     } catch (err) {
         console.error("Login failed:", err);
     }
