@@ -16,7 +16,24 @@ export default function NavBar() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
+  const [isLogin, setProfile] = React.useState(false);
+
   React.useEffect(() => {
+    const handleLogin = () => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        console.log(token);
+        if (token) {
+          setProfile(true);
+        } else {
+          setProfile(false);
+        }
+      }
+    };
+
+    handleLogin();
+    console.log(isLogin);
+
     const handleScroll = () => {
       if (ref.current) {
         setIsScrolled(ref.current.scrollTop > 10);
@@ -75,7 +92,13 @@ export default function NavBar() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <LoginModal text="Sign in" />
+          {!isLogin ? (
+            <LoginModal text="Sign in" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-500 text-xl">👤</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3 md:hidden">
@@ -117,7 +140,13 @@ export default function NavBar() {
               {link.name}
             </a>
           ))}
-          <LoginModal text="Sign in" />
+          {!isLogin ? (
+            <LoginModal text="Sign in" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-500 text-xl">👤</span>
+            </div>
+          )}
         </div>
       </nav>
     </div>
