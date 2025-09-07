@@ -5,38 +5,29 @@ import "../globals.css";
 import NavBar from "@/components/layout/NavBar";
 import { useState, useEffect } from "react";
 import { getProjects, ProjectDetail } from "@/lib/projects";
+import { useRouter } from "next/navigation";
 
 
 export default function ProjectPage() {
+    const router = useRouter();
     const [projectName, setProjectName] = useState("");
     const [projects, setProjects] = useState<ProjectDetail[] | null>([])
 
     useEffect(() => {
         const fetchProjects = async () => {
             const projects = await getProjects()
-            console.log("projects are: ", projects)
             setProjects(projects)
         }
         fetchProjects()
     }, [])
 
-    // const projects = [
-    //   { name: "New partner" , description: "New startup", image: "/project.jpeg" },
-    //   { name: "Future", description: "Future is Future", image: "/project.jpeg" },
-    //   { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
-    //   { name: "New partner" , description: "New startup", image: "/project.jpeg" },
-    //   { name: "Future", description: "Future is Future", image: "/project.jpeg" },
-    //   { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
-    //   { name: "New partner" , description: "New startup", image: "/project.jpeg" },
-    //   { name: "Future", description: "Future is Future", image: "/project.jpeg" },
-    //   { name: "Project", description: "AI and creativity", image: "/project.jpeg" },
-    // ];
+    const handleProjectClick = (uuid: string) => {
+        router.push(`/projects/${uuid}`);
+    };
 
     const filteredProjects = projects?.filter((proj) =>
         proj.name.toLowerCase().includes(projectName.toLowerCase()),
     );
-    console.log("ProjectName state:", projectName);
-    console.log("filter project:", filteredProjects);
 
     return (
         <>
@@ -64,8 +55,9 @@ export default function ProjectPage() {
                     <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
                         {filteredProjects?.map((proj, index) => (
                             <article
-                                key={index}
+                                key={proj.uuid || index}
                                 className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
+                                onClick={() => handleProjectClick(proj.uuid)}
                             >
                                 <img src={proj.image} alt={proj.name} />
                                 <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>

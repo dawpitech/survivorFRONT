@@ -25,7 +25,7 @@ export type ProjectDetail = {
     }>;
 };
 
-export async function getProjects() {
+export async function getProjects(): Promise<ProjectDetail[] | null> {
     try {
         const projectsDetail: ProjectDetail[] = await apiClient.get("/startups")
         console.log("ProjectsDetail response is ", projectsDetail)
@@ -35,3 +35,14 @@ export async function getProjects() {
         return null
     }
 }
+
+export async function getProjectByUuid(uuid: string): Promise<ProjectDetail | null> {
+    try {
+        const project: ProjectDetail = await apiClient.get(`/startup/${uuid}`);
+        return project;
+    } catch (error) {
+        console.error("Error fetching project details:", error);
+        return null;
+    }
+}
+
