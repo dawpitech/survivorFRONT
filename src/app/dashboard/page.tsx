@@ -15,7 +15,7 @@ interface Project {
 }
 
 export default function DashboardPage() {
-    const [activePage, setActivePage] = useState<Page>("users");
+    const [activePage, setActivePage] = useState<Page>("messages");
     const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
@@ -23,6 +23,7 @@ export default function DashboardPage() {
             const user = await getUserInformation();
             if (user?.role) {
                 setUserRole(user.role);
+                setActivePage(user.role === "admin" ? "users" : "messages");
             }
         }
         fetchUser();

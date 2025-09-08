@@ -1,7 +1,7 @@
 "use client";
 
 import "../globals.css";
-import {getUserInformation} from "@/lib/user";
+import {getUserInformation, getUserProfilePicture} from "@/lib/user";
 import {updateUserInformation} from "@/lib/user";
 
 import { FC, useEffect, useState } from "react";
@@ -19,6 +19,7 @@ export type User = {
 
 const ProfileCard: FC = () => {
     const [user, setUser] = useState<User | null>(null);
+    const [profilePic, setProfilePic] = useState<string | null>(null);
     const [editName, setEditName] = useState(false);
     const [editEmail, setEditEmail] = useState(false);
 
@@ -26,6 +27,11 @@ const ProfileCard: FC = () => {
         (async () => {
             const data = await getUserInformation();
             setUser(data);
+
+            if (data?.uuid) {
+                const pic = await getUserProfilePicture(data.uuid);
+                setProfilePic(pic || null);
+            }
         })();
     }, []);
 
@@ -47,6 +53,12 @@ const ProfileCard: FC = () => {
             await updateUserInformation(user.uuid, updatedData);
             const updatedUser = await getUserInformation();
             setUser(updatedUser);
+
+            if (updatedUser?.uuid) {
+                const pic = await getUserProfilePicture(updatedUser.uuid);
+                setProfilePic(pic || null);
+            }
+
             setEditName(false);
             setEditEmail(false);
         } catch (err) {
@@ -60,14 +72,13 @@ const ProfileCard: FC = () => {
 
     return (
         <div className="w-full max-w-md mx-auto rounded-2xl shadow-lg border p-8 bg-white">
-            {/* Header with avatar + close */}
             <div className="flex justify-between items-start">
                 <div className="flex gap-5">
                     <div className="relative">
                         <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                            {user.profilePic ? (
+                            {profilePic ? (
                                 <img
-                                    src={user.profilePic}
+                                    src={profilePic}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
@@ -75,7 +86,6 @@ const ProfileCard: FC = () => {
                                 <span className="text-gray-500 text-3xl">👤</span>
                             )}
                         </div>
-                        {/* Pencil for profile picture (kept separate) */}
                         <button type="button" className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow">
                             <Pencil size={16} className="text-gray-600" />
                         </button>
@@ -90,12 +100,9 @@ const ProfileCard: FC = () => {
                 </button>
             </div>
 
-            {/* Divider */}
             <hr className="my-6" />
 
-            {/* Info form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Name field */}
                 <div className="flex justify-between items-center text-base">
                     <label className="text-gray-500" htmlFor="name">
                         Name
@@ -121,7 +128,6 @@ const ProfileCard: FC = () => {
                     </div>
                 </div>
 
-                {/* Email field */}
                 <div className="flex justify-between items-center text-base">
                     <label className="text-gray-500" htmlFor="email">
                         Email
@@ -148,13 +154,11 @@ const ProfileCard: FC = () => {
                     </div>
                 </div>
 
-                {/* Role field (read-only) */}
                 <div className="flex justify-between text-base">
                     <span className="text-gray-500">Role</span>
                     <span className="text-gray-800 capitalize">{user.role}</span>
                 </div>
 
-                {/* Save button if any field is being edited */}
                 {(editName || editEmail) && (
                     <button
                         type="submit"
@@ -167,6 +171,7 @@ const ProfileCard: FC = () => {
         </div>
     );
 };
+
 
 export default function ProfilePage() {
     return (
