@@ -240,7 +240,7 @@ export function ManageUsers() {
     const handleCreate = async (newUser: Omit<User, "uuid">) => {
         try {
             const created = await createUser(newUser);
-            setUsers([...users, newUser]);
+            setUsers([...users, created]);
             setShowCreateModal(false);
         } catch (err) {
             console.error("Failed to create user:", err);

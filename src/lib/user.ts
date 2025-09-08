@@ -80,8 +80,8 @@ export async function createUser(updatedData: UpdateUserData) {
         // @ts-expect-error
         const { profilePic, investor_uuid, founder_uuid, uuid, ...dataToSend } = updatedData;
 
-        const response = await apiClient.post(`/users/`, JSON.stringify(dataToSend));
-        return response.data;
+        const response = await apiClient.post(`/users/`, JSON.stringify(dataToSend)) as User;
+        return response;
     } catch (err) {
         console.error("Failed to create user:", err);
         throw err;
