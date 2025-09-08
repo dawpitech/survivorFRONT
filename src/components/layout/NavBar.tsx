@@ -6,17 +6,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {getUserProfilePicture} from "@/lib/user";
-
-function handlelogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("uuid");
-    window.location.href = "/";
-}
+import {getUserProfilePicture, handleLogout} from "@/lib/user";
 
 export default function NavBar() {
   const navLinks = [
@@ -141,7 +133,7 @@ export default function NavBar() {
                         <DropdownMenuItem onSelect={() => (window.location.href = "/dashboard")}>
                             Dashboard
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={handlelogout}>Logout</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleLogout}>Logout</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )}

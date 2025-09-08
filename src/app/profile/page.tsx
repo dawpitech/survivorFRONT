@@ -1,7 +1,7 @@
 "use client";
 
 import "../globals.css";
-import {getUserInformation, getUserProfilePicture} from "@/lib/user";
+import {getUserInformation, getUserProfilePicture, updateUserPicture} from "@/lib/user";
 import {updateUserInformation} from "@/lib/user";
 
 import { FC, useEffect, useState } from "react";
@@ -22,6 +22,7 @@ const ProfileCard: FC = () => {
     const [profilePic, setProfilePic] = useState<string | null>(null);
     const [editName, setEditName] = useState(false);
     const [editEmail, setEditEmail] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -43,10 +44,10 @@ const ProfileCard: FC = () => {
         const updatedData: { name?: string; email?: string } = {};
 
         if (editName) {
-            updatedData.name = formData.get('name') as string;
+            updatedData.name = formData.get("name") as string;
         }
         if (editEmail) {
-            updatedData.email = formData.get('email') as string;
+            updatedData.email = formData.get("email") as string;
         }
 
         try {
@@ -66,12 +67,38 @@ const ProfileCard: FC = () => {
         }
     };
 
+    // Handle profile picture upload (PNG only, sent as byte array)
+    const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!user || !e.target.files?.[0]) return;
+
+        const file = e.target.files[0];
+
+        if (file.type !== "image/png") {
+            setShowErrorModal(true);
+            return;
+        }
+
+        try {
+            const buffer = await file.arrayBuffer();
+            const byteArray = Array.from(new Uint8Array(buffer));
+
+            await updateUserPicture(user.uuid, byteArray);
+
+            // Update preview
+            const objectUrl = URL.createObjectURL(file);
+            setProfilePic(objectUrl);
+        } catch (err) {
+            console.error("Failed to update profile picture:", err);
+            setShowErrorModal(true);
+        }
+    };
+
     if (!user) {
         return <p className="text-center text-gray-500">Loading...</p>;
     }
 
     return (
-        <div className="w-full max-w-md mx-auto rounded-2xl shadow-lg border p-8 bg-white">
+        <div className="w-full max-w-md mx-auto rounded-2xl shadow-lg border p-8 bg-white relative">
             <div className="flex justify-between items-start">
                 <div className="flex gap-5">
                     <div className="relative">
@@ -86,9 +113,20 @@ const ProfileCard: FC = () => {
                                 <span className="text-gray-500 text-3xl">👤</span>
                             )}
                         </div>
-                        <button type="button" className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow">
+                        {/* Hidden file input */}
+                        <input
+                            type="file"
+                            accept="image/png"
+                            className="hidden"
+                            id="profile-upload"
+                            onChange={handleProfilePicChange}
+                        />
+                        <label
+                            htmlFor="profile-upload"
+                            className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow cursor-pointer hover:bg-gray-100"
+                        >
                             <Pencil size={16} className="text-gray-600" />
-                        </button>
+                        </label>
                     </div>
                     <div>
                         <h2 className="text-xl font-semibold">{user.name}</h2>
@@ -103,6 +141,7 @@ const ProfileCard: FC = () => {
             <hr className="my-6" />
 
             <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Name field */}
                 <div className="flex justify-between items-center text-base">
                     <label className="text-gray-500" htmlFor="name">
                         Name
@@ -128,6 +167,7 @@ const ProfileCard: FC = () => {
                     </div>
                 </div>
 
+                {/* Email field */}
                 <div className="flex justify-between items-center text-base">
                     <label className="text-gray-500" htmlFor="email">
                         Email
@@ -154,6 +194,7 @@ const ProfileCard: FC = () => {
                     </div>
                 </div>
 
+                {/* Role field */}
                 <div className="flex justify-between text-base">
                     <span className="text-gray-500">Role</span>
                     <span className="text-gray-800 capitalize">{user.role}</span>
@@ -168,10 +209,29 @@ const ProfileCard: FC = () => {
                     </button>
                 )}
             </form>
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                            Upload Error
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                            Only PNG files are allowed!
+                        </p>
+                        <button
+                            onClick={() => setShowErrorModal(false)}
+                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
 
 export default function ProfilePage() {
     return (

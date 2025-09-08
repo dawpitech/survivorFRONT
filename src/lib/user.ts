@@ -74,6 +74,12 @@ export async function updateUserInformation(uuid: string, updatedData: UpdateUse
     }
 }
 
+export async  function handleLogout() {
+    localStorage.removeItem("uuid");
+    localStorage.removeItem("token");
+    window.location.href = "/";
+}
+
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -93,5 +99,14 @@ export async function getUserProfilePicture(uuid: string): Promise<string> {
     } catch (err) {
         console.error(`Failed to fetch picture for user ${uuid}:`, err);
         return "";
+    }
+}
+
+export async function updateUserPicture(uuid: string, pictureBytes: number[]): Promise<void> {
+    try {
+        await apiClient.put(`/users/${uuid}/picture`, JSON.stringify({ picture: pictureBytes }));
+    } catch (err) {
+        console.error(`Failed to update picture for user ${uuid}:`, err);
+        throw err;
     }
 }
