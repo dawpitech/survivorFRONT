@@ -67,7 +67,6 @@ const ProfileCard: FC = () => {
         }
     };
 
-    // Handle profile picture upload (PNG only, sent as byte array)
     const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!user || !e.target.files?.[0]) return;
 
@@ -79,12 +78,8 @@ const ProfileCard: FC = () => {
         }
 
         try {
-            const buffer = await file.arrayBuffer();
-            const byteArray = Array.from(new Uint8Array(buffer));
+            await updateUserPicture(user.uuid, file);
 
-            await updateUserPicture(user.uuid, byteArray);
-
-            // Update preview
             const objectUrl = URL.createObjectURL(file);
             setProfilePic(objectUrl);
         } catch (err) {

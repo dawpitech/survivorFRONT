@@ -39,6 +39,19 @@ export const apiClient = {
         return response.json();
     },
 
+    putForm: async (endpoint: string, data: FormData) => {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "PUT",
+            headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+            },
+            body: data,
+        });
+        if (!response.ok) throw new Error("Request error");
+        return response.json();
+    },
+
   post: async (endpoint: string, data: string) => {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {

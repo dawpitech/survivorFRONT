@@ -102,9 +102,12 @@ export async function getUserProfilePicture(uuid: string): Promise<string> {
     }
 }
 
-export async function updateUserPicture(uuid: string, pictureBytes: number[]): Promise<void> {
+export async function updateUserPicture(uuid: string, file: File): Promise<void> {
     try {
-        await apiClient.put(`/users/${uuid}/picture`, JSON.stringify({ picture: pictureBytes }));
+        const formData = new FormData();
+        formData.append("picture", file);
+
+        await apiClient.putForm(`/users/${uuid}/picture`, formData);
     } catch (err) {
         console.error(`Failed to update picture for user ${uuid}:`, err);
         throw err;
