@@ -20,8 +20,6 @@ export type ProjectDetail = {
     image?: string;
     founders?: Array<{
         name: string;
-        role?: string;
-        linkedin?: string;
     }>;
 };
 

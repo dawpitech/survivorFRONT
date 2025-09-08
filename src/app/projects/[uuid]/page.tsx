@@ -135,6 +135,13 @@ export default function ProjectDetailPage() {
                                 )}
                             </div>
                         </div>
+                        <div>
+                            <span className="font-medium">Founders:</span>
+                            {project.founders?.map((founder) => {
+                                return (founder.name
+                                )
+                            })}
+                        </div>
 
                         <div className="mt-8 flex justify-center">
                             <button
