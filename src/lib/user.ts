@@ -6,7 +6,6 @@ export async function getUserInformation() {
   try {
     const response = await apiClient.get("/users/me");
 
-    console.log("Information", response);
     localStorage.setItem("uuid", response.uuid);
     return response;
   } catch (err) {
@@ -19,7 +18,6 @@ export async function getAllUsers() {
     try {
         const response = await apiClient.get("/users/");
 
-        console.log("All users", response);
         return response;
     } catch (err) {
         console.error("Fetching all users failed:", err);
@@ -36,7 +34,6 @@ export async function createUserAdmin() {
       "/users",
       JSON.stringify({ email, name, role }),
     );
-    console.log("Information", response);
   } catch (err) {
     console.error("Sign-up failed:", err);
   }
@@ -62,7 +59,6 @@ export type UpdateUserData = Partial<{
 export async function updateUserInformation(uuid: string, updatedData: UpdateUserData) {
     try {
         const response = await apiClient.patch(`/users/${uuid}`, JSON.stringify(updatedData));
-        console.log("User updated:", response.data);
         return response.data;
     } catch (err) {
         console.error("Failed to update user:", err);
@@ -73,6 +69,9 @@ export async function updateUserInformation(uuid: string, updatedData: UpdateUse
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
         const response = await apiClient.getRaw(`/users/${uuid}/picture`);
+        if (!response.ok) {
+            return "";
+        }
         const blob = await response.blob();
 
         return await new Promise<string>((resolve, reject) => {

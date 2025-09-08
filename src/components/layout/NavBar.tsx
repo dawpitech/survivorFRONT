@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {getUserProfilePicture} from "@/lib/user";
 
 function handlelogout() {
     localStorage.removeItem("token");
@@ -29,14 +30,23 @@ export default function NavBar() {
 
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [profilePic, setProfilePic] = React.useState<string>("");
 
   const [isLogin, setProfile] = React.useState(false);
+
+    React.useEffect(() => {
+        const storedUuid = localStorage.getItem("uuid");
+        if (isLogin && storedUuid) {
+            getUserProfilePicture(storedUuid).then((pic) => {
+                if (pic) setProfilePic(pic);
+            });
+        }
+    }, [isLogin]);
 
   React.useEffect(() => {
     const handleLogin = () => {
       if (typeof window !== "undefined") {
         const token = localStorage.getItem("token");
-        console.log(token);
         if (token) {
           setProfile(true);
         } else {
@@ -46,7 +56,6 @@ export default function NavBar() {
     };
 
     handleLogin();
-    console.log(isLogin);
 
     const handleScroll = () => {
       if (ref.current) {
@@ -106,22 +115,35 @@ export default function NavBar() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          {!isLogin ? (
-            <LoginModal text="Sign in" />
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500 text-xl">👤</span>
-                </div>
-              </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                    <DropdownMenuItem onSelect={() => window.location.href = "/profile"}>Profile</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => window.location.href = "/dashboard"}>Dashboard</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={handlelogout}>Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+            {!isLogin ? (
+                <LoginModal text="Sign in" />
+            ) : (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        {profilePic ? (
+                            <img
+                                src={profilePic}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-gray-500 text-xl">👤</span>
+                            </div>
+                        )}
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuItem onSelect={() => (window.location.href = "/profile")}>
+                            Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => (window.location.href = "/dashboard")}>
+                            Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handlelogout}>Logout</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </div>
 
         <div className="flex items-center gap-3 md:hidden">

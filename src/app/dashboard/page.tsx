@@ -20,10 +20,6 @@ export default function DashboardPage() {
 
     return (
         <>
-            <header>
-                <NavBar />
-            </header>
-
             <main className="flex min-h-screen">
                 <aside className="w-64 bg-gray-100 border-r border-gray-300 p-4 flex flex-col">
                     <h2 className="text-lg font-semibold mb-6">Dashboard</h2>
@@ -218,17 +214,21 @@ export function ManageUsers() {
 }
 
 function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void; onSave: (user: User) => void; }) {
+    const profilePicDefault = "data:image/png;base64,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";
+
     const [edited, setEdited] = useState<User>(user);
     const [loadingPic, setLoadingPic] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Fetch profile picture when modal opens
     useEffect(() => {
         let mounted = true;
         async function loadProfilePic() {
             setLoadingPic(true);
             const picData = await getUserProfilePicture(user.uuid);
             edited.profilePic = picData;
+            if (edited.profilePic == "") {
+                edited.profilePic = profilePicDefault;
+            }
             setLoadingPic(false);
         }
 
@@ -256,7 +256,7 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
                         <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse mb-2" />
                     ) : (
                         <img
-                            src={edited.profilePic || "https://via.placeholder.com/80"}
+                            src={edited.profilePic || profilePicDefault}
                             alt="Profile"
                             className="w-20 h-20 rounded-full mb-2"
                         />
