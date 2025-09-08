@@ -5,18 +5,9 @@ import {Navigation, Autoplay} from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
+import {NewsProps} from "@/app/news/page";
 
-export interface Slide {
-    title: string;
-    description: string;
-    image: string;
-}
-
-export interface NewsCarouselProps {
-    slides: Slide[];
-}
-
-export default function NewsCarousel({ slides }: NewsCarouselProps) {
+export default function NewsCarousel({ news }: NewsProps) {
     return (
         <div className="p-8">
             <div className="w-full max-w-6xl mx-auto">
@@ -27,22 +18,23 @@ export default function NewsCarousel({ slides }: NewsCarouselProps) {
                     autoplay={{delay: 7000, disableOnInteraction: false}}
                     loop
                     className="h-96"
+                    style={{ '--swiper-navigation-color': 'black' } as React.CSSProperties}
                 >
-                    {slides.map((slide, index) => (
+                    {news.map((newsIndex, index) => (
                         <SwiperSlide key={index}>
                             <div className="flex flex-col md:flex-row items-stretch bg-gray-100 h-full">
-                                <div className="md:w-1/3 w-full bg-purple-200 bg-opacity-70 p-6 flex flex-col justify-center h-full">
-                                    <h2 className="text-xl font-bold mb-2">{slide.title}</h2>
-                                    <p className="mb-4">{slide.description}</p>
-                                    <button className="bg-black text-white px-4 py-2 rounded self-start">
+                                <div className="md:w-2/5 w-full bg-[#0077B6] bg-opacity-70 p-6 flex flex-col justify-center h-full">
+                                    <h2 className="ml-6 mb-1.5 text-xl font-bold">{newsIndex.title}</h2>
+                                    <p className="ml-6 mb-4">{newsIndex.description}</p>
+                                    <button className="ml-6 bg-black text-white px-4 py-2 rounded self-start">
                                         Learn More
                                     </button>
                                 </div>
 
-                                <div className="md:w-2/3 w-full h-full">
+                                <div className="md:w-3/5 w-full h-full">
                                     <img
-                                        src={slide.image}
-                                        alt={slide.title}
+                                        src={newsIndex.image}
+                                        alt={newsIndex.title}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
