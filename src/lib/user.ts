@@ -74,6 +74,20 @@ export async function updateUserInformation(uuid: string, updatedData: UpdateUse
     }
 }
 
+export async function createUser(updatedData: UpdateUserData) {
+    try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const { profilePic, investor_uuid, founder_uuid, uuid, ...dataToSend } = updatedData;
+
+        const response = await apiClient.post(`/users/`, JSON.stringify(dataToSend));
+        return response.data;
+    } catch (err) {
+        console.error("Failed to create user:", err);
+        throw err;
+    }
+}
+
 export async  function handleLogout() {
     localStorage.removeItem("uuid");
     localStorage.removeItem("token");
@@ -113,3 +127,7 @@ export async function updateUserPicture(uuid: string, file: File): Promise<void>
         throw err;
     }
 }
+
+export const userDeleteProfilePicture = async (uuid: string) => {
+    return apiClient.delete(`/users/${uuid}/picture`);
+};

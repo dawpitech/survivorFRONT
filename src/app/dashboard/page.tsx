@@ -2,7 +2,14 @@
 
 import {useState, useRef, useEffect} from "react";
 import "../globals.css";
-import {getAllUsers, User, updateUserInformation, getUserProfilePicture, getUserInformation} from "@/lib/user";
+import {
+    getAllUsers,
+    User,
+    updateUserInformation,
+    getUserProfilePicture,
+    getUserInformation,
+    updateUserPicture, userDeleteProfilePicture, createUser
+} from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 
 type Page = "projects" | "users" | "messages" | "statistics";
@@ -92,6 +99,77 @@ function SidebarButton({
     );
 }
 
+function CreateUserModal({
+                             onClose,
+                             onCreate,
+                         }: {
+    onClose: () => void;
+    onCreate: (user: Omit<User, "uuid">) => void;
+}) {
+    const [form, setForm] = useState<Omit<User, "uuid">>({
+        name: "",
+        email: "",
+        role: "investor", // default
+    });
+
+    const handleSubmit = () => {
+        if (!form.name || !form.email) {
+            alert("Please fill in all fields");
+            return;
+        }
+        onCreate(form);
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+                <h3 className="text-lg font-semibold mb-4">Create User</h3>
+
+                <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="border rounded px-2 py-1 w-full mb-2"
+                    placeholder="Name"
+                />
+                <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="border rounded px-2 py-1 w-full mb-2"
+                    placeholder="Email"
+                />
+                <select
+                    value={form.role}
+                    onChange={(e) =>
+                        setForm({ ...form, role: e.target.value as User["role"] })
+                    }
+                    className="border rounded px-2 py-1 w-full mb-4"
+                >
+                    <option value="admin">Admin</option>
+                    <option value="founder">Founder</option>
+                    <option value="investor">Investor</option>
+                </select>
+
+                <div className="flex justify-end space-x-2">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 rounded-lg bg-gray-300"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 rounded-lg bg-green-500 text-white"
+                    >
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function ManageUsers() {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
@@ -99,14 +177,17 @@ export function ManageUsers() {
     const [sortKey, setSortKey] = useState<keyof User>("name");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
-
-                // The API returns the array directly, not wrapped in a data property
-                const userData = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
+                const userData = Array.isArray(response)
+                    ? response
+                    : Array.isArray(response.data)
+                        ? response.data
+                        : [];
                 setUsers(userData);
             } catch (err) {
                 console.error("Failed to fetch users:", err);
@@ -127,12 +208,10 @@ export function ManageUsers() {
 
     const filteredUsers = users
         .filter((u) => {
-
             const matchesSearch =
                 u.name?.toLowerCase().includes(search.toLowerCase()) ||
                 u.email?.toLowerCase().includes(search.toLowerCase());
             const matchesRole = roleFilter === "All" || u.role === roleFilter;
-
             return matchesSearch && matchesRole;
         })
         .sort((a, b) => {
@@ -145,7 +224,8 @@ export function ManageUsers() {
             return 0;
         });
 
-    const arrow = (key: keyof User) => (sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : "");
+    const arrow = (key: keyof User) =>
+        sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : "";
 
     const handleSave = async (updatedUser: User) => {
         try {
@@ -154,6 +234,16 @@ export function ManageUsers() {
             setSelectedUser(null);
         } catch (err) {
             console.error("Failed to update user:", err);
+        }
+    };
+
+    const handleCreate = async (newUser: Omit<User, "uuid">) => {
+        try {
+            const created = await createUser(newUser);
+            setUsers([...users, newUser]);
+            setShowCreateModal(false);
+        } catch (err) {
+            console.error("Failed to create user:", err);
         }
     };
 
@@ -181,6 +271,12 @@ export function ManageUsers() {
                         <option value="founder">Founders</option>
                         <option value="investor">Investors</option>
                     </select>
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                    >
+                        + Create User
+                    </button>
                 </div>
             </div>
 
@@ -224,6 +320,20 @@ export function ManageUsers() {
             {selectedUser && (
                 <UserModal user={selectedUser} onClose={() => setSelectedUser(null)} onSave={handleSave} />
             )}
+            {selectedUser && (
+                <UserModal
+                    user={selectedUser}
+                    onClose={() => setSelectedUser(null)}
+                    onSave={handleSave}
+                />
+            )}
+
+            {showCreateModal && (
+                <CreateUserModal
+                    onClose={() => setShowCreateModal(false)}
+                    onCreate={handleCreate}
+                />
+            )}
         </div>
     );
 }
@@ -232,34 +342,50 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
     const profilePicDefault = "data:image/png;base64,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";
 
     const [edited, setEdited] = useState<User>(user);
+    const [profilePic, setProfilePic] = useState<string | null>(null);
     const [loadingPic, setLoadingPic] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        let mounted = true;
-        async function loadProfilePic() {
+        (async () => {
             setLoadingPic(true);
-            const picData = await getUserProfilePicture(user.uuid);
-            edited.profilePic = picData;
-            if (edited.profilePic == "") {
-                edited.profilePic = profilePicDefault;
-            }
+            const pic = await getUserProfilePicture(user.uuid);
+            setProfilePic(pic || profilePicDefault);
             setLoadingPic(false);
-        }
-
-        loadProfilePic();
-        return () => { mounted = false; };
+        })();
     }, [user.uuid]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => setEdited({ ...edited, profilePic: reader.result as string });
-        reader.readAsDataURL(file);
+    const handleResetProfilePic = async () => {
+        try {
+            await userDeleteProfilePicture(user.uuid);
+            setProfilePic(profilePicDefault);
+        } catch (err) {
+            console.error("Failed to reset profile picture:", err);
+            setShowErrorModal(true);
+        }
     };
 
-    const handleResetProfilePic = () => setEdited({ ...edited, profilePic: "" });
+    const handleProfilePicChange = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        if (!user || !e.target.files?.[0]) return;
+
+        const file = e.target.files[0];
+        if (file.type !== "image/png") {
+            setShowErrorModal(true);
+            return;
+        }
+
+        try {
+            await updateUserPicture(user.uuid, file);
+            const objectUrl = URL.createObjectURL(file);
+            setProfilePic(objectUrl);
+        } catch (err) {
+            console.error("Failed to update profile picture:", err);
+            setShowErrorModal(true);
+        }
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -271,9 +397,9 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
                         <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse mb-2" />
                     ) : (
                         <img
-                            src={edited.profilePic || profilePicDefault}
+                            src={profilePic || profilePicDefault}
                             alt="Profile"
-                            className="w-20 h-20 rounded-full mb-2"
+                            className="w-20 h-20 rounded-full mb-2 object-cover"
                         />
                     )}
                     <div className="flex space-x-2">
@@ -283,20 +409,23 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
                         >
                             Change Profile Picture
                         </button>
-                        <button onClick={handleResetProfilePic} className="bg-red-200 px-3 py-1 rounded-lg">
+                        <button
+                            onClick={handleResetProfilePic}
+                            className="bg-red-200 px-3 py-1 rounded-lg"
+                        >
                             Reset
                         </button>
                     </div>
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png"
                         ref={fileInputRef}
                         className="hidden"
-                        onChange={handleFileChange}
+                        onChange={handleProfilePicChange}
                     />
                 </div>
 
-                {/* Name, email, role, etc. */}
+                {/* Editable fields */}
                 <input
                     type="text"
                     value={edited.name}
@@ -313,12 +442,14 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
                 />
                 <select
                     value={edited.role}
-                    onChange={(e) => setEdited({ ...edited, role: e.target.value as User["role"] })}
+                    onChange={(e) =>
+                        setEdited({ ...edited, role: e.target.value as User["role"] })
+                    }
                     className="border rounded px-2 py-1 w-full mb-2"
                 >
                     <option value="admin">Admin</option>
                     <option value="founder">Founder</option>
-                    <option value="investor">Investors</option>
+                    <option value="investor">Investor</option>
                 </select>
 
                 <button
@@ -332,11 +463,32 @@ function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void;
                     <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-300">
                         Cancel
                     </button>
-                    <button onClick={() => onSave(edited)} className="px-4 py-2 rounded-lg bg-blue-500 text-white">
+                    <button
+                        onClick={() => onSave(edited)}
+                        className="px-4 py-2 rounded-lg bg-blue-500 text-white"
+                    >
                         Save
                     </button>
                 </div>
             </div>
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                            Upload Error
+                        </h2>
+                        <p className="text-gray-600 mb-6">Only PNG files are allowed!</p>
+                        <button
+                            onClick={() => setShowErrorModal(false)}
+                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

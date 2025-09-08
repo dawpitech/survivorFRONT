@@ -49,7 +49,7 @@ export const apiClient = {
             body: data,
         });
         if (!response.ok) throw new Error("Request error");
-        return response.json();
+        return response;
     },
 
   post: async (endpoint: string, data: string) => {
@@ -65,6 +65,18 @@ export const apiClient = {
     if (!response.ok) throw new Error("Request error");
     return response.json();
   },
+
+    delete: async (endpoint: string) => {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+            },
+        });
+        if (!response.ok) throw new Error("Delete request error");
+        return response.status === 204 ? null : response;
+    },
 
   patch: async (endpoint: string, data: string) => {
     const token = localStorage.getItem("token");
