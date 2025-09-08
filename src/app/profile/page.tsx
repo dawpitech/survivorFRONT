@@ -7,12 +7,18 @@ import {updateUserInformation} from "@/lib/user";
 import { FC, useEffect, useState } from "react";
 import { X, Pencil } from "lucide-react";
 
-interface UserInfo {
-    [key: string]: string;
-}
+export type User = {
+    uuid: string;
+    name: string;
+    email: string;
+    role: "admin" | "founder" | "investor";
+    founder_uuid?: string | null;
+    investor_uuid?: string | null;
+    profilePic?: string;
+};
 
 const ProfileCard: FC = () => {
-    const [user, setUser] = useState<UserInfo | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [editName, setEditName] = useState(false);
     const [editEmail, setEditEmail] = useState(false);
 
@@ -25,11 +31,27 @@ const ProfileCard: FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        await updateUserInformation(e);
-        const updatedData = await getUserInformation();
-        setUser(updatedData);
-        setEditName(false);
-        setEditEmail(false);
+        if (!user) return;
+
+        const formData = new FormData(e.currentTarget);
+        const updatedData: { name?: string; email?: string } = {};
+
+        if (editName) {
+            updatedData.name = formData.get('name') as string;
+        }
+        if (editEmail) {
+            updatedData.email = formData.get('email') as string;
+        }
+
+        try {
+            await updateUserInformation(user.uuid, updatedData);
+            const updatedUser = await getUserInformation();
+            setUser(updatedUser);
+            setEditName(false);
+            setEditEmail(false);
+        } catch (err) {
+            console.error("Failed to update user:", err);
+        }
     };
 
     if (!user) {
@@ -42,8 +64,16 @@ const ProfileCard: FC = () => {
             <div className="flex justify-between items-start">
                 <div className="flex gap-5">
                     <div className="relative">
-                        <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-500 text-3xl">👤</span>
+                        <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                            {user.profilePic ? (
+                                <img
+                                    src={user.profilePic}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-gray-500 text-3xl">👤</span>
+                            )}
                         </div>
                         {/* Pencil for profile picture (kept separate) */}
                         <button type="button" className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow">
@@ -121,7 +151,7 @@ const ProfileCard: FC = () => {
                 {/* Role field (read-only) */}
                 <div className="flex justify-between text-base">
                     <span className="text-gray-500">Role</span>
-                    <span className="text-gray-800">{user.role}</span>
+                    <span className="text-gray-800 capitalize">{user.role}</span>
                 </div>
 
                 {/* Save button if any field is being edited */}

@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import {useState, useRef, useEffect} from "react";
 import "../globals.css";
 import NavBar from "@/components/layout/NavBar";
+import {getAllUsers, UpdateUserData, User, updateUserInformation} from "@/lib/user";
 
 type Page = "projects" | "users" | "messages" | "statistics";
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    role: "Admin" | "Founder" | "Investor";
-    profilePic?: string;
-}
 
 interface Project {
     id: number;
@@ -87,17 +80,32 @@ function SidebarButton({
     );
 }
 
-function ManageUsers() {
-    const [users, setUsers] = useState<User[]>([
-        { id: 1, name: "Alice Johnson", email: "alice@example.com", role: "Admin" },
-        { id: 2, name: "Bob Smith", email: "bob@example.com", role: "Founder" },
-        { id: 3, name: "Charlie Lee", email: "charlie@example.com", role: "Investor" },
-    ]);
+export function ManageUsers() {
+    const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
-    const [roleFilter, setRoleFilter] = useState<"All" | "Admin" | "Founder" | "Investor">("All");
+    const [roleFilter, setRoleFilter] = useState<"All" | User["role"]>("All");
     const [sortKey, setSortKey] = useState<keyof User>("name");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await getAllUsers();
+                console.log("API Response:", response);
+                console.log("Response data:", response.data);
+
+                // The API returns the array directly, not wrapped in a data property
+                const userData = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
+                console.log("Setting users to:", userData);
+                setUsers(userData);
+            } catch (err) {
+                console.error("Failed to fetch users:", err);
+                setUsers([]);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     const handleSort = (key: keyof User) => {
         if (sortKey === key) {
@@ -108,12 +116,24 @@ function ManageUsers() {
         }
     };
 
+    // Debug logging
+    console.log("Current users state:", users);
+    console.log("Search term:", search);
+    console.log("Role filter:", roleFilter);
+
     const filteredUsers = users
         .filter((u) => {
+            console.log("Filtering user:", u);
+
             const matchesSearch =
-                u.name.toLowerCase().includes(search.toLowerCase()) ||
-                u.email.toLowerCase().includes(search.toLowerCase());
+                u.name?.toLowerCase().includes(search.toLowerCase()) ||
+                u.email?.toLowerCase().includes(search.toLowerCase());
             const matchesRole = roleFilter === "All" || u.role === roleFilter;
+
+            console.log("Matches search:", matchesSearch);
+            console.log("Matches role:", matchesRole);
+            console.log("Overall match:", matchesSearch && matchesRole);
+
             return matchesSearch && matchesRole;
         })
         .sort((a, b) => {
@@ -126,8 +146,19 @@ function ManageUsers() {
             return 0;
         });
 
-    const arrow = (key: keyof User) =>
-        sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : "";
+    console.log("Filtered users:", filteredUsers);
+
+    const arrow = (key: keyof User) => (sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : "");
+
+    const handleSave = async (updatedUser: User) => {
+        try {
+            await updateUserInformation(updatedUser.uuid, updatedUser);
+            setUsers(users.map((u) => (u.uuid === updatedUser.uuid ? updatedUser : u)));
+            setSelectedUser(null);
+        } catch (err) {
+            console.error("Failed to update user:", err);
+        }
+    };
 
     return (
         <div>
@@ -144,14 +175,14 @@ function ManageUsers() {
                     <select
                         value={roleFilter}
                         onChange={(e) =>
-                            setRoleFilter(e.target.value as "All" | "Admin" | "Founder" | "Investor")
+                            setRoleFilter(e.target.value as "All" | User["role"])
                         }
                         className="border px-3 py-1 rounded-lg"
                     >
                         <option value="All">All Roles</option>
-                        <option value="Admin">Admins</option>
-                        <option value="Founder">Founders</option>
-                        <option value="Investor">Investors</option>
+                        <option value="admin">Admins</option>
+                        <option value="founder">Founders</option>
+                        <option value="investor">Investors</option>
                     </select>
                 </div>
             </div>
@@ -159,55 +190,50 @@ function ManageUsers() {
             <table className="w-full border border-gray-300">
                 <thead className="bg-gray-100">
                 <tr>
-                    <th
-                        className="p-2 border cursor-pointer"
-                        onClick={() => handleSort("name")}
-                    >
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("name")}>
                         Name{arrow("name")}
                     </th>
-                    <th
-                        className="p-2 border cursor-pointer"
-                        onClick={() => handleSort("email")}
-                    >
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("email")}>
                         Email{arrow("email")}
                     </th>
-                    <th
-                        className="p-2 border cursor-pointer"
-                        onClick={() => handleSort("role")}
-                    >
+                    <th className="p-2 border cursor-pointer" onClick={() => handleSort("role")}>
                         Role{arrow("role")}
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                {filteredUsers.map((u) => (
-                    <tr
-                        key={u.id}
-                        className="border-t hover:bg-gray-50 cursor-pointer"
-                        onClick={() => setSelectedUser(u)}
-                    >
-                        <td className="p-2 border">{u.name}</td>
-                        <td className="p-2 border">{u.email}</td>
-                        <td className="p-2 border">{u.role}</td>
+                {filteredUsers.length > 0 ? (
+                    filteredUsers.map((u) => (
+                        <tr
+                            key={u.uuid}
+                            className="border-t hover:bg-gray-50 cursor-pointer"
+                            onClick={() => setSelectedUser(u)}
+                        >
+                            <td className="p-2 border">{u.name}</td>
+                            <td className="p-2 border">{u.email}</td>
+                            <td className="p-2 border">{u.role}</td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan={3} className="p-4 text-center text-gray-500">
+                            No users found
+                        </td>
                     </tr>
-                ))}
+                )}
                 </tbody>
             </table>
 
             {selectedUser && (
-                <UserModal
-                    user={selectedUser}
-                    onClose={() => setSelectedUser(null)}
-                    onSave={(updated) => {
-                        setUsers(users.map((u) => (u.id === updated.id ? updated : u)));
-                        setSelectedUser(null);
-                    }}
-                />
+                <UserModal user={selectedUser} onClose={() => setSelectedUser(null)} onSave={handleSave} />
             )}
         </div>
     );
 }
 
+// --------------------
+// USER MODAL
+// --------------------
 function UserModal({
                        user,
                        onClose,
@@ -224,15 +250,11 @@ function UserModal({
         const file = e.target.files?.[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = () => {
-            setEdited({ ...edited, profilePic: reader.result as string });
-        };
+        reader.onload = () => setEdited({ ...edited, profilePic: reader.result as string });
         reader.readAsDataURL(file);
     };
 
-    const handleResetProfilePic = () => {
-        setEdited({ ...edited, profilePic: "" });
-    };
+    const handleResetProfilePic = () => setEdited({ ...edited, profilePic: "" });
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -252,10 +274,7 @@ function UserModal({
                         >
                             Change Profile Picture
                         </button>
-                        <button
-                            onClick={handleResetProfilePic}
-                            className="bg-red-200 px-3 py-1 rounded-lg"
-                        >
+                        <button onClick={handleResetProfilePic} className="bg-red-200 px-3 py-1 rounded-lg">
                             Reset
                         </button>
                     </div>
@@ -286,14 +305,12 @@ function UserModal({
 
                 <select
                     value={edited.role}
-                    onChange={(e) =>
-                        setEdited({ ...edited, role: e.target.value as User["role"] })
-                    }
+                    onChange={(e) => setEdited({ ...edited, role: e.target.value as User["role"] })}
                     className="border rounded px-2 py-1 w-full mb-2"
                 >
-                    <option>Admin</option>
-                    <option>Founder</option>
-                    <option>Investor</option>
+                    <option value="admin">Admin</option>
+                    <option value="founder">Founder</option>
+                    <option value="investor">Investors</option>
                 </select>
 
                 <button
@@ -307,10 +324,7 @@ function UserModal({
                     <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-300">
                         Cancel
                     </button>
-                    <button
-                        onClick={() => onSave(edited)}
-                        className="px-4 py-2 rounded-lg bg-blue-500 text-white"
-                    >
+                    <button onClick={() => onSave(edited)} className="px-4 py-2 rounded-lg bg-blue-500 text-white">
                         Save
                     </button>
                 </div>

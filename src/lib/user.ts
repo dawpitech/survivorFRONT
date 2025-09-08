@@ -17,7 +17,7 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
-        const response = await apiClient.get("/users");
+        const response = await apiClient.get("/users/");
 
         console.log("All users", response);
         return response;
@@ -25,46 +25,6 @@ export async function getAllUsers() {
         console.error("Fetching all users failed:", err);
         return [];
     }
-}
-
-interface UpdateUserData {
-  email?: string;
-  password?: string;
-  name?: string;
-}
-
-export async function updateUserInformation(
-  e: React.FormEvent<HTMLFormElement>,
-) {
-  const data = new FormData(e.currentTarget);
-  const email = data.get("email") as string;
-  const pwd = data.get("password") as string;
-  const name = data.get("name") as string;
-  const id = localStorage.getItem("uuid");
-
-  const updateData: UpdateUserData = {};
-
-  if (email && email.trim() !== "") {
-    updateData.email = email;
-  }
-
-  if (pwd && pwd.trim() !== "") {
-    updateData.password = pwd;
-  }
-
-  if (name && name.trim() !== "") {
-    updateData.name = name;
-  }
-
-  try {
-    const response = await apiClient.patch(
-      `/users/${id}`,
-      JSON.stringify(updateData),
-    );
-    console.log("Information", response);
-  } catch (err) {
-    console.error("Get user failed:", err);
-  }
 }
 
 export async function createUserAdmin() {
@@ -80,4 +40,32 @@ export async function createUserAdmin() {
   } catch (err) {
     console.error("Sign-up failed:", err);
   }
+}
+
+export type User = {
+    uuid: string;
+    name: string;
+    email: string;
+    role: "admin" | "founder" | "investor";
+    founder_uuid?: string | null;
+    investor_uuid?: string | null;
+    profilePic?: string;
+};
+
+export type UpdateUserData = Partial<{
+    name: string;
+    email: string;
+    password: string;
+    role: User["role"];
+}>;
+
+export async function updateUserInformation(uuid: string, updatedData: UpdateUserData) {
+    try {
+        const response = await apiClient.patch(`/users/${uuid}`, JSON.stringify(updatedData));
+        console.log("User updated:", response.data);
+        return response.data;
+    } catch (err) {
+        console.error("Failed to update user:", err);
+        throw err;
+    }
 }
