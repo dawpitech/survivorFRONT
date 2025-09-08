@@ -4,7 +4,7 @@ import { apiClient } from "@/lib/api";
 
 export async function getUserInformation() {
   try {
-    const response = await apiClient.get("/user/me");
+    const response = await apiClient.get("/users/me");
 
     console.log("Information", response);
     localStorage.setItem("uuid", response.uuid);
@@ -46,7 +46,7 @@ export async function updateUserInformation(
 
   try {
     const response = await apiClient.patch(
-      `/user/${id}`,
+      `/users/${id}`,
       JSON.stringify(updateData),
     );
     console.log("Information", response);
