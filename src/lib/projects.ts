@@ -27,7 +27,7 @@ export type ProjectDetail = {
 
 export async function getProjects(): Promise<ProjectDetail[] | null> {
     try {
-        const projectsDetail: ProjectDetail[] = await apiClient.get("/startups")
+        const projectsDetail: ProjectDetail[] = await apiClient.get("/startups/")
         console.log("ProjectsDetail response is ", projectsDetail)
         return projectsDetail
     } catch (error) {

@@ -2,7 +2,6 @@
 
 import { InputProject } from "@/components/ui/inputProject";
 import "../globals.css";
-import NavBar from "@/components/layout/NavBar";
 import { useState, useEffect } from "react";
 import { getProjects, ProjectDetail } from "@/lib/projects";
 import { useRouter } from "next/navigation";
