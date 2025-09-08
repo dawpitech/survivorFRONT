@@ -1,5 +1,4 @@
 import "./globals.css";
-import NavBar from "@/components/layout/NavBar";
 
 export default function Home() {
   const projects = [
@@ -9,9 +8,6 @@ export default function Home() {
   ];
   return (
     <>
-      <header>
-        <NavBar />
-      </header>
       <main>
         <section className="flex flex-col">
           <h1 className="text-6xl pl-[2rem] pt-[3rem] pb-[2rem]">

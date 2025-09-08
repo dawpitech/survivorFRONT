@@ -31,9 +31,6 @@ export default function ProjectPage() {
 
     return (
         <>
-            <header>
-                <NavBar />
-            </header>
             <main>
                 <section className="flex flex-col items-center justify-center">
                     <h2 className="text-6xl pl-[2rem] pt-[3rem] pb-[2rem]">Projects</h2>

@@ -1,7 +1,6 @@
 "use client";
 
 import "../globals.css";
-import NavBar from "@/components/layout/NavBar";
 import {getUserInformation} from "@/lib/user";
 import {updateUserInformation} from "@/lib/user";
 
@@ -142,9 +141,6 @@ const ProfileCard: FC = () => {
 export default function ProfilePage() {
     return (
         <>
-            <header>
-                <NavBar />
-            </header>
             <main>
                 <h2 className="text-6xl pt-[3rem] pb-[2rem] text-center">My Profile</h2>
 
