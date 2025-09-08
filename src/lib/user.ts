@@ -15,6 +15,18 @@ export async function getUserInformation() {
   }
 }
 
+export async function getAllUsers() {
+    try {
+        const response = await apiClient.get("/users");
+
+        console.log("All users", response);
+        return response;
+    } catch (err) {
+        console.error("Fetching all users failed:", err);
+        return [];
+    }
+}
+
 interface UpdateUserData {
   email?: string;
   password?: string;

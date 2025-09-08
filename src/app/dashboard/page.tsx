@@ -119,8 +119,10 @@ function ManageUsers() {
         .sort((a, b) => {
             const v1 = a[sortKey];
             const v2 = b[sortKey];
-            if (v1 < v2) return sortDir === "asc" ? -1 : 1;
-            if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+            if (v1 && v2) {
+                if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+                if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+            }
             return 0;
         });
 
