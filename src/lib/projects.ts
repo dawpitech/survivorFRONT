@@ -36,7 +36,7 @@ export async function getProjects(): Promise<ProjectDetail[] | null> {
 
 export async function getProjectByUuid(uuid: string): Promise<ProjectDetail | null> {
     try {
-        const project: ProjectDetail = await apiClient.get(`/startup/${uuid}`);
+        const project: ProjectDetail = await apiClient.get(`/startups/${uuid}`);
         return project;
     } catch (error) {
         console.error("Error fetching project details:", error);
@@ -44,3 +44,13 @@ export async function getProjectByUuid(uuid: string): Promise<ProjectDetail | nu
     }
 }
 
+export async function updateProject(uuid: string, updatedData: Partial<ProjectDetail>) {
+    try {
+        const response = await apiClient.patch(`/startups/${uuid}`, JSON.stringify(updatedData));
+        console.log("Project updated:", response);
+        return response;
+    } catch (err) {
+        console.error("Failed to update project:", err);
+        throw err;
+    }
+}

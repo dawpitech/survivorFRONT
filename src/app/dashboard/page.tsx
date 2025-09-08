@@ -3,7 +3,8 @@
 import {useState, useRef, useEffect} from "react";
 import "../globals.css";
 import NavBar from "@/components/layout/NavBar";
-import {getAllUsers, UpdateUserData, User, updateUserInformation} from "@/lib/user";
+import {getAllUsers, UpdateUserData, User, updateUserInformation, getUserProfilePicture} from "@/lib/user";
+import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 
 type Page = "projects" | "users" | "messages" | "statistics";
 
@@ -28,7 +29,7 @@ export default function DashboardPage() {
                     <h2 className="text-lg font-semibold mb-6">Dashboard</h2>
                     <nav className="flex flex-col gap-2">
                         <SidebarButton page="projects" activePage={activePage} setActivePage={setActivePage}>
-                            Manage Projects
+                            Manage Startups
                         </SidebarButton>
                         <SidebarButton page="users" activePage={activePage} setActivePage={setActivePage}>
                             Manage Users
@@ -92,12 +93,9 @@ export function ManageUsers() {
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
-                console.log("API Response:", response);
-                console.log("Response data:", response.data);
 
                 // The API returns the array directly, not wrapped in a data property
                 const userData = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
-                console.log("Setting users to:", userData);
                 setUsers(userData);
             } catch (err) {
                 console.error("Failed to fetch users:", err);
@@ -116,23 +114,13 @@ export function ManageUsers() {
         }
     };
 
-    // Debug logging
-    console.log("Current users state:", users);
-    console.log("Search term:", search);
-    console.log("Role filter:", roleFilter);
-
     const filteredUsers = users
         .filter((u) => {
-            console.log("Filtering user:", u);
 
             const matchesSearch =
                 u.name?.toLowerCase().includes(search.toLowerCase()) ||
                 u.email?.toLowerCase().includes(search.toLowerCase());
             const matchesRole = roleFilter === "All" || u.role === roleFilter;
-
-            console.log("Matches search:", matchesSearch);
-            console.log("Matches role:", matchesRole);
-            console.log("Overall match:", matchesSearch && matchesRole);
 
             return matchesSearch && matchesRole;
         })
@@ -145,8 +133,6 @@ export function ManageUsers() {
             }
             return 0;
         });
-
-    console.log("Filtered users:", filteredUsers);
 
     const arrow = (key: keyof User) => (sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : "");
 
@@ -231,20 +217,24 @@ export function ManageUsers() {
     );
 }
 
-// --------------------
-// USER MODAL
-// --------------------
-function UserModal({
-                       user,
-                       onClose,
-                       onSave,
-                   }: {
-    user: User;
-    onClose: () => void;
-    onSave: (user: User) => void;
-}) {
+function UserModal({ user, onClose, onSave }: { user: User; onClose: () => void; onSave: (user: User) => void; }) {
     const [edited, setEdited] = useState<User>(user);
+    const [loadingPic, setLoadingPic] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Fetch profile picture when modal opens
+    useEffect(() => {
+        let mounted = true;
+        async function loadProfilePic() {
+            setLoadingPic(true);
+            const picData = await getUserProfilePicture(user.uuid);
+            edited.profilePic = picData;
+            setLoadingPic(false);
+        }
+
+        loadProfilePic();
+        return () => { mounted = false; };
+    }, [user.uuid]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -262,11 +252,15 @@ function UserModal({
                 <h3 className="text-lg font-semibold mb-4">Edit User</h3>
 
                 <div className="flex flex-col items-center mb-4">
-                    <img
-                        src={edited.profilePic || "https://via.placeholder.com/80"}
-                        alt="Profile"
-                        className="w-20 h-20 rounded-full mb-2"
-                    />
+                    {loadingPic ? (
+                        <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse mb-2" />
+                    ) : (
+                        <img
+                            src={edited.profilePic || "https://via.placeholder.com/80"}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full mb-2"
+                        />
+                    )}
                     <div className="flex space-x-2">
                         <button
                             onClick={() => fileInputRef.current?.click()}
@@ -287,6 +281,7 @@ function UserModal({
                     />
                 </div>
 
+                {/* Name, email, role, etc. */}
                 <input
                     type="text"
                     value={edited.name}
@@ -294,7 +289,6 @@ function UserModal({
                     className="border rounded px-2 py-1 w-full mb-2"
                     placeholder="Name"
                 />
-
                 <input
                     type="email"
                     value={edited.email}
@@ -302,7 +296,6 @@ function UserModal({
                     className="border rounded px-2 py-1 w-full mb-2"
                     placeholder="Email"
                 />
-
                 <select
                     value={edited.role}
                     onChange={(e) => setEdited({ ...edited, role: e.target.value as User["role"] })}
@@ -334,14 +327,33 @@ function UserModal({
 }
 
 function ManageProjects() {
-    const [projects, setProjects] = useState<Project[]>([
-        { id: 1, name: "Project Alpha", description: "First project", image: "" },
-        { id: 2, name: "Project Beta", description: "Second project", image: "" },
-        { id: 3, name: "Project Gamma", description: "Third project", image: "" },
-    ]);
+    const [projects, setProjects] = useState<ProjectDetail[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [selectedProject, setSelectedProject] = useState<ProjectDetail | null>(null);
+
+    useEffect(() => {
+        loadProjects();
+    }, []);
+
+    const loadProjects = async () => {
+        try {
+            setLoading(true);
+            const fetchedProjects = await getProjects();
+            if (fetchedProjects) {
+                setProjects(fetchedProjects);
+            } else {
+                setError("Failed to load projects");
+            }
+        } catch (err) {
+            setError("An error occurred while loading projects");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSort = () => {
         setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -355,13 +367,47 @@ function ManageProjects() {
             return 0;
         });
 
+    const handleProjectUpdate = async (updatedProject: ProjectDetail) => {
+        try {
+            await updateProject(updatedProject.uuid, updatedProject);
+            setProjects(projects.map((p) =>
+                p.uuid === updatedProject.uuid ? updatedProject : p
+            ));
+            setSelectedProject(null);
+        } catch (err) {
+            console.error("Failed to update project:", err);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-lg">Loading projects...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-64">
+                <div className="text-red-500 text-lg mb-4">{error}</div>
+                <button
+                    onClick={loadProjects}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Manage Projects</h2>
+                <h2 className="text-xl font-semibold">Manage Startups</h2>
                 <input
                     type="text"
-                    placeholder="Search projects..."
+                    placeholder="Search startups..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="border px-3 py-1 rounded-lg"
@@ -377,31 +423,40 @@ function ManageProjects() {
                     >
                         Name {sortDir === "asc" ? "↑" : "↓"}
                     </th>
+                    <th className="p-2 border">Sector</th>
+                    <th className="p-2 border">Maturity</th>
+                    <th className="p-2 border">Status</th>
                     <th className="p-2 border">Description</th>
                 </tr>
                 </thead>
                 <tbody>
                 {filteredProjects.map((p) => (
                     <tr
-                        key={p.id}
+                        key={p.uuid}
                         className="border-t hover:bg-gray-50 cursor-pointer"
                         onClick={() => setSelectedProject(p)}
                     >
-                        <td className="p-2 border">{p.name}</td>
-                        <td className="p-2 border">{p.description}</td>
+                        <td className="p-2 border font-medium">{p.name}</td>
+                        <td className="p-2 border">{p.sector || "-"}</td>
+                        <td className="p-2 border">{p.maturity || "-"}</td>
+                        <td className="p-2 border">{p.project_status || "-"}</td>
+                        <td className="p-2 border">{p.description || "-"}</td>
                     </tr>
                 ))}
                 </tbody>
             </table>
 
+            {filteredProjects.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                    No projects found matching your search.
+                </div>
+            )}
+
             {selectedProject && (
                 <ProjectModal
                     project={selectedProject}
                     onClose={() => setSelectedProject(null)}
-                    onSave={(updated) => {
-                        setProjects(projects.map((p) => (p.id === updated.id ? updated : p)));
-                        setSelectedProject(null);
-                    }}
+                    onSave={handleProjectUpdate}
                 />
             )}
         </div>
@@ -413,11 +468,12 @@ function ProjectModal({
                           onClose,
                           onSave,
                       }: {
-    project: Project;
+    project: ProjectDetail;
     onClose: () => void;
-    onSave: (project: Project) => void;
+    onSave: (project: ProjectDetail) => void;
 }) {
-    const [edited, setEdited] = useState<Project>(project);
+    const [edited, setEdited] = useState<ProjectDetail>(project);
+    const [saving, setSaving] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -430,57 +486,229 @@ function ProjectModal({
         reader.readAsDataURL(file);
     };
 
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await onSave(edited);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-                <h3 className="text-lg font-semibold mb-4">Edit Project</h3>
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-semibold mb-4">Edit Startup</h3>
 
-                <input
-                    type="text"
-                    value={edited.name}
-                    onChange={(e) => setEdited({ ...edited, name: e.target.value })}
-                    className="border rounded px-2 py-1 w-full mb-2"
-                />
-                <textarea
-                    value={edited.description}
-                    onChange={(e) =>
-                        setEdited({ ...edited, description: e.target.value })
-                    }
-                    className="border rounded px-2 py-1 w-full mb-2"
-                />
-
-                <div className="flex flex-col items-center mb-4">
-                    {edited.image && (
-                        <img
-                            src={edited.image}
-                            alt="Preview"
-                            className="w-full h-32 object-cover rounded mb-2"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Startup Name *
+                        </label>
+                        <input
+                            type="text"
+                            value={edited.name}
+                            onChange={(e) => setEdited({ ...edited, name: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                            required
                         />
-                    )}
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-gray-200 px-3 py-1 rounded-lg"
-                    >
-                        Change Project Image
-                    </button>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email *
+                        </label>
+                        <input
+                            type="email"
+                            value={edited.email}
+                            onChange={(e) => setEdited({ ...edited, email: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Sector
+                        </label>
+                        <input
+                            type="text"
+                            value={edited.sector || ""}
+                            onChange={(e) => setEdited({ ...edited, sector: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Phone
+                        </label>
+                        <input
+                            type="tel"
+                            value={edited.phone || ""}
+                            onChange={(e) => setEdited({ ...edited, phone: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Legal Status
+                        </label>
+                        <select
+                            value={edited.legal_status || ""}
+                            onChange={(e) => setEdited({ ...edited, legal_status: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                        >
+                            <option value="">Select Status</option>
+                            <option value="SpA">SpA</option>
+                            <option value="SAS">SAS</option>
+                            <option value="LLC">LLC</option>
+                            <option value="Corp">Corporation</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Maturity
+                        </label>
+                        <select
+                            value={edited.maturity || ""}
+                            onChange={(e) => setEdited({ ...edited, maturity: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                        >
+                            <option value="">Select Maturity</option>
+                            <option value="Idea">Idea</option>
+                            <option value="Prototype">Prototype</option>
+                            <option value="MVP">MVP</option>
+                            <option value="Growth">Growth</option>
+                            <option value="Scale">Scale</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Project Status
+                        </label>
+                        <select
+                            value={edited.project_status || ""}
+                            onChange={(e) => setEdited({ ...edited, project_status: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                        >
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Growth">Growth</option>
+                            <option value="Paused">Paused</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Website URL
+                        </label>
+                        <input
+                            type="url"
+                            value={edited.website_url || ""}
+                            onChange={(e) => setEdited({ ...edited, website_url: e.target.value })}
+                            className="border rounded px-3 py-2 w-full"
+                            placeholder="https://..."
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address
+                    </label>
                     <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileInputRef}
-                        className="hidden"
-                        onChange={handleFileChange}
+                        type="text"
+                        value={edited.address || ""}
+                        onChange={(e) => setEdited({ ...edited, address: e.target.value })}
+                        className="border rounded px-3 py-2 w-full"
                     />
                 </div>
 
-                <div className="flex justify-end space-x-2">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-300">
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Social Media URL
+                    </label>
+                    <input
+                        type="url"
+                        value={edited.social_media_url || ""}
+                        onChange={(e) => setEdited({ ...edited, social_media_url: e.target.value })}
+                        className="border rounded px-3 py-2 w-full"
+                        placeholder="https://..."
+                    />
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                    </label>
+                    <textarea
+                        value={edited.description || ""}
+                        onChange={(e) => setEdited({ ...edited, description: e.target.value })}
+                        className="border rounded px-3 py-2 w-full h-24"
+                        placeholder="Describe your project..."
+                    />
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Current Needs
+                    </label>
+                    <textarea
+                        value={edited.needs || ""}
+                        onChange={(e) => setEdited({ ...edited, needs: e.target.value })}
+                        className="border rounded px-3 py-2 w-full h-20"
+                        placeholder="What does your project need right now?"
+                    />
+                </div>
+
+                <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Startup Image
+                    </label>
+                    <div className="flex flex-col items-center">
+                        {edited.image && (
+                            <img
+                                src={edited.image}
+                                alt="Preview"
+                                className="w-full h-32 object-cover rounded mb-2"
+                            />
+                        )}
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg"
+                        >
+                            {edited.image ? "Change Startup Image" : "Add Startup Image"}
+                        </button>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileChange}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400"
+                        disabled={saving}
+                    >
                         Cancel
                     </button>
                     <button
-                        onClick={() => onSave(edited)}
-                        className="px-4 py-2 rounded-lg bg-blue-500 text-white"
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
                     >
-                        Save
+                        {saving ? "Saving..." : "Save"}
                     </button>
                 </div>
             </div>

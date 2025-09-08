@@ -69,3 +69,20 @@ export async function updateUserInformation(uuid: string, updatedData: UpdateUse
         throw err;
     }
 }
+
+export async function getUserProfilePicture(uuid: string): Promise<string> {
+    try {
+        const response = await apiClient.getRaw(`/users/${uuid}/picture`);
+        const blob = await response.blob();
+
+        return await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (err) {
+        console.error(`Failed to fetch picture for user ${uuid}:`, err);
+        return "";
+    }
+}
