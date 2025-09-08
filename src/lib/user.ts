@@ -58,7 +58,9 @@ export type UpdateUserData = Partial<{
 
 export async function updateUserInformation(uuid: string, updatedData: UpdateUserData) {
     try {
-        const response = await apiClient.patch(`/users/${uuid}`, JSON.stringify(updatedData));
+        const { profilePic, ...dataToSend } = updatedData as any;
+
+        const response = await apiClient.patch(`/users/${uuid}`, JSON.stringify(dataToSend));
         return response.data;
     } catch (err) {
         console.error("Failed to update user:", err);
