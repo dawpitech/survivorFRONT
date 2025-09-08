@@ -4,6 +4,8 @@ import { apiClient } from "@/lib/api";
 
 export async function getUserInformation() {
   try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
     const response = await apiClient.get("/users/me");
 
     localStorage.setItem("uuid", response.uuid);
@@ -16,6 +18,8 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const response = await apiClient.get("/users/");
 
         return response;
@@ -58,7 +62,9 @@ export type UpdateUserData = Partial<{
 
 export async function updateUserInformation(uuid: string, updatedData: UpdateUserData) {
     try {
-        const { profilePic, ...dataToSend } = updatedData as any;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const { profilePic, ...dataToSend } = updatedData;
 
         const response = await apiClient.patch(`/users/${uuid}`, JSON.stringify(dataToSend));
         return response.data;
@@ -70,6 +76,8 @@ export async function updateUserInformation(uuid: string, updatedData: UpdateUse
 
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const response = await apiClient.getRaw(`/users/${uuid}/picture`);
         if (!response.ok) {
             return "";

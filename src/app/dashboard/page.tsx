@@ -2,8 +2,7 @@
 
 import {useState, useRef, useEffect} from "react";
 import "../globals.css";
-import NavBar from "@/components/layout/NavBar";
-import {getAllUsers, UpdateUserData, User, updateUserInformation, getUserProfilePicture} from "@/lib/user";
+import {getAllUsers, User, updateUserInformation, getUserProfilePicture, getUserInformation} from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 
 type Page = "projects" | "users" | "messages" | "statistics";
@@ -17,6 +16,17 @@ interface Project {
 
 export default function DashboardPage() {
     const [activePage, setActivePage] = useState<Page>("users");
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function fetchUser() {
+            const user = await getUserInformation();
+            if (user?.role) {
+                setUserRole(user.role);
+            }
+        }
+        fetchUser();
+    }, []);
 
     return (
         <>
@@ -24,12 +34,16 @@ export default function DashboardPage() {
                 <aside className="w-64 bg-gray-100 border-r border-gray-300 p-4 flex flex-col">
                     <h2 className="text-lg font-semibold mb-6">Dashboard</h2>
                     <nav className="flex flex-col gap-2">
-                        <SidebarButton page="projects" activePage={activePage} setActivePage={setActivePage}>
-                            Manage Startups
-                        </SidebarButton>
-                        <SidebarButton page="users" activePage={activePage} setActivePage={setActivePage}>
-                            Manage Users
-                        </SidebarButton>
+                        {userRole === "admin" && (
+                            <>
+                                <SidebarButton page="projects" activePage={activePage} setActivePage={setActivePage}>
+                                    Manage Startups
+                                </SidebarButton>
+                                <SidebarButton page="users" activePage={activePage} setActivePage={setActivePage}>
+                                    Manage Users
+                                </SidebarButton>
+                            </>
+                        )}
                         <SidebarButton page="messages" activePage={activePage} setActivePage={setActivePage}>
                             Messages
                         </SidebarButton>
