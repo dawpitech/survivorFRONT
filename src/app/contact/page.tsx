@@ -2,7 +2,6 @@
 
 import { HTMLInputTypeAttribute, useState } from "react";
 import "../globals.css";
-import NavBar from "@/components/layout/NavBar";
 import { apiClient } from "@/lib/api";
 
 type ContactTextProps = {
@@ -84,9 +83,6 @@ export default function ContactPage() {
 
     return (
         <>
-            <header>
-                <NavBar />
-            </header>
             <main>
                 <section className="grid h-screen place-items-center z-10 overflow-hidden bg-white py-20 dark:bg-dark lg:py-[120px]">
                     <div className="container">

@@ -15,7 +15,8 @@ export default function NavBar() {
     { name: "Home", path: "/" },
     { name: "Projects", path: "/projects" },
     { name: "News", path: "/news" },
-    { name: "About", path: "/" },
+    { name: "Contact", path: "/contact" },
+    { name: "About", path: "/about" },
   ];
 
   const ref = React.useRef<HTMLDivElement>(null);
