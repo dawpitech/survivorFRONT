@@ -5,12 +5,17 @@ import "../globals.css";
 import { useState, useEffect } from "react";
 import { getProjects, ProjectDetail } from "@/lib/projects";
 import { useRouter } from "next/navigation";
+import { SimpleListMaturity } from "@/components/layout/projectFilter";
+import SimpleListSector from "@/components/layout/projectFilter";
 
 
 export default function ProjectPage() {
     const router = useRouter();
     const [projectName, setProjectName] = useState("");
+    const [projectLocation, setProjectLocation] = useState("");
     const [projects, setProjects] = useState<ProjectDetail[] | null>([])
+    const [selectedSector, setSelectedSector] = useState<string | null>(null);
+    const [selectedMaturity, setSelectedMaturity] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -24,9 +29,13 @@ export default function ProjectPage() {
         router.push(`/projects/${uuid}`);
     };
 
-    const filteredProjects = projects?.filter((proj) =>
-        proj.name.toLowerCase().includes(projectName.toLowerCase()),
-    );
+    const filteredProjects = projects?.filter((proj) => {
+        const nameMatch = proj.name.toLowerCase().includes(projectName.toLowerCase());
+        const locationMatch = proj.address?.toLowerCase().includes(projectLocation.toLowerCase());
+        const sectorMatch = !selectedSector || selectedSector === "All" || proj.sector === selectedSector;
+        const maturityMatch = !selectedMaturity || selectedMaturity === "All" || proj.maturity === selectedMaturity;
+        return nameMatch && sectorMatch && maturityMatch && locationMatch;
+    });
 
     return (
         <>
@@ -46,7 +55,16 @@ export default function ProjectPage() {
                         innovation and collaboration.{" "}
                     </p>
                     <div className="w-full max-w-6xl flex justify-end mb-6">
-                        <InputProject value={projectName} onChange={setProjectName} />
+                        {projects ? <SimpleListSector
+                            projects={projects}
+                            onSectorChange={setSelectedSector}
+                        /> : null}
+                        {projects ? <SimpleListMaturity
+                            projects={projects}
+                            onSectorChange={setSelectedMaturity}
+                        /> : null}
+                        <InputProject name="Project Name" value={projectName} onChange={setProjectName} />
+                        <InputProject name="Project Location" value={projectLocation} onChange={setProjectLocation} />
                     </div>
                     <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
                         {filteredProjects?.map((proj, index) => (
