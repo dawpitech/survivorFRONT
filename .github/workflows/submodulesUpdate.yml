@@ -7,8 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  compile:
+    if: github.repository_owner == 'dawpitech'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile
+        run: docker build .
+
   trigger-submodules-update:
     runs-on: ubuntu-latest
+    needs: [ compile ]
     steps:
       - name: Trigger Main Repository CI/CD
         run: |
