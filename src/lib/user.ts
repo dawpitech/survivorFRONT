@@ -25,9 +25,7 @@ export interface Investor {
 
 export async function getUserInformation() {
   try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-    const response = await apiClient.get("/users/me");
+    const response = await apiClient.get("/users/me") as User;
 
     localStorage.setItem("uuid", response.uuid);
     return response;
@@ -39,9 +37,7 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const response = await apiClient.get("/users/");
+        const response = await apiClient.get("/users/") as User[];
 
         return response;
     } catch (err) {
@@ -117,8 +113,6 @@ export async  function handleLogout() {
 
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const response = await apiClient.getRaw(`/users/${uuid}/picture`);
         if (!response.ok) {
             return "";
@@ -155,9 +149,7 @@ export const userDeleteProfilePicture = async (uuid: string) => {
 
 export async function getFounderInfos(uuid: string) {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const response = await apiClient.get(`/founders/${uuid}`);
+        const response = await apiClient.get(`/founders/${uuid}`) as FounderDetail;
 
         return response;
     } catch (err) {
@@ -168,9 +160,7 @@ export async function getFounderInfos(uuid: string) {
 
 export async function getInvestorsInfos(uuid: string) {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        const response = await apiClient.get(`/investors/${uuid}`);
+        const response = await apiClient.get(`/investors/${uuid}`) as Investor;
 
         return response;
     } catch (err) {

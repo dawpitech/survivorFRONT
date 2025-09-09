@@ -27,6 +27,7 @@ const ProfileCard: FC = () => {
     useEffect(() => {
         (async () => {
             const data = await getUserInformation();
+            if (data == "") return;
             setUser(data);
 
             if (data?.uuid) {
@@ -53,6 +54,7 @@ const ProfileCard: FC = () => {
         try {
             await updateUserInformation(user.uuid, updatedData);
             const updatedUser = await getUserInformation();
+            if (updatedUser == "") throw new Error("Failed to update user");
             setUser(updatedUser);
 
             if (updatedUser?.uuid) {

@@ -22,6 +22,7 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchUser() {
             const user = await getUserInformation();
+            if (user == "") return;
             if (user?.role) {
                 setUserRole(user.role);
                 setActivePage(user.role === "admin" ? "users" : "messages");
@@ -95,9 +96,13 @@ function InvestorInfosPage() {
         const loadInvestor = async () => {
             try {
                 const user = await getUserInformation();
+                if (user == "") throw new Error("User not found");
                 if (user?.investor_uuid) {
                     setInvestor_uuid(user.investor_uuid);
                     const data = await getInvestorsInfos(user.investor_uuid);
+                    if (Array.isArray(data)) {
+                        return;
+                    }
                     setInvestor(data);
                     setEdited(data);
                 }
@@ -216,8 +221,12 @@ function MyStartupPage() {
         const loadFounder = async () => {
             try {
                 const user = await getUserInformation();
+                if (user == "") throw new Error("User not found");
                 if (user?.founder_uuid) {
                     const response = await getFounderInfos(user.founder_uuid);
+                    if (Array.isArray(response)) {
+                        return;
+                    }
                     setFounder(response);
                 }
             } catch (err) {
@@ -432,11 +441,11 @@ export function ManageUsers() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await getAllUsers();
+                const response = await getAllUsers() as User[];
                 const userData = Array.isArray(response)
                     ? response
-                    : Array.isArray(response.data)
-                        ? response.data
+                    : Array.isArray(response)
+                        ? response
                         : [];
                 setUsers(userData);
             } catch (err) {
