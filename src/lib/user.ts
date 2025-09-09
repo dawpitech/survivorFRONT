@@ -37,7 +37,7 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
-        const response = await apiClient.get("/users/");
+        const response = await apiClient.get<User[]>("/users/");
 
         return response;
     } catch (err) {
