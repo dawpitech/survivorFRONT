@@ -5,7 +5,7 @@ import {Navigation, Autoplay} from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
-import {News, NewsProps} from "@/app/news/page";
+import {NewsProps} from "@/app/news/page";
 
 export default function NewsCarousel({ news, onClick }: NewsProps) {
 
@@ -26,7 +26,7 @@ export default function NewsCarousel({ news, onClick }: NewsProps) {
                             <div className="flex flex-col md:flex-row items-stretch bg-gray-100 h-full">
                                 <div className="md:w-2/5 w-full bg-[#0077B6] bg-opacity-70 p-6 flex flex-col justify-center h-full">
                                     <h2 className="ml-6 mb-1.5 text-xl font-bold">{newsIndex.title}</h2>
-                                    <p className="ml-6 mb-4">{newsIndex.description}</p>
+                                    <p className="ml-6 mb-4 line-clamp-3 overflow-hidden">{newsIndex.description}</p>
                                     <button className="ml-6 bg-black text-white px-4 py-2 rounded self-start" onClick={() => onClick(newsIndex)}>
                                         Learn More
                                     </button>
