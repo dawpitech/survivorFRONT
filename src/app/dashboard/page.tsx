@@ -13,8 +13,9 @@ import {
 } from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
+import {editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 
-type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos" | "events";
+type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos" | "events" | "news";
 
 export default function DashboardPage() {
     const [activePage, setActivePage] = useState<Page>("messages");
@@ -49,12 +50,20 @@ export default function DashboardPage() {
                                 <SidebarButton page="events" activePage={activePage} setActivePage={setActivePage}>
                                     Manage Events
                                 </SidebarButton>
+                                <SidebarButton page="news" activePage={activePage} setActivePage={setActivePage}>
+                                    Manage News
+                                </SidebarButton>
                             </>
                         )}
                         {userRole === "founder" && (
-                            <SidebarButton page="my-startup" activePage={activePage} setActivePage={setActivePage}>
-                                My Startup
-                            </SidebarButton>
+                            <>
+                                <SidebarButton page="my-startup" activePage={activePage} setActivePage={setActivePage}>
+                                    My Startup
+                                </SidebarButton>
+                                <SidebarButton page="news" activePage={activePage} setActivePage={setActivePage}>
+                                    Manage News
+                                </SidebarButton>
+                            </>
                         )}
                         {userRole === "investor" && (
                             <SidebarButton page="investor-infos" activePage={activePage} setActivePage={setActivePage}>
@@ -74,6 +83,7 @@ export default function DashboardPage() {
                 <section className="flex-1 p-6">
                     {activePage === "projects" && <ManageProjects />}
                     {activePage === "users" && <ManageUsers />}
+                    {activePage === "news" && <ManageNews />}
                     {activePage === "events" && <ManageEvents />}
                     {activePage === "messages" && <MessagesPage />}
                     {activePage === "statistics" && <div>📊 Statistics dashboard coming soon...</div>}
@@ -86,6 +96,435 @@ export default function DashboardPage() {
                 <p className="text-center text-gray-600">© 2025 JEB Incubator</p>
             </footer>
         </>
+    );
+}
+
+function CreateNewsModal({
+                             onClose,
+                             onCreate,
+                         }: {
+    onClose: () => void;
+    onCreate: (form: Omit<News, 'uuid' | 'picture'>, pictureFile: File) => void;
+}) {
+    const [form, setForm] = useState<Omit<News, 'uuid' | 'picture'>>({
+        title: "",
+        location: "",
+        category: "",
+        startup_id: "",
+        description: "",
+    });
+    const [pictureFile, setPictureFile] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handlePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            const file = e.target.files[0];
+            setPictureFile(file);
+            setPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSubmit = () => {
+        if (!form.title || !form.category || !pictureFile) {
+            alert("Please fill in all required fields (Title, Category, Picture)");
+            return;
+        }
+        onCreate(form, pictureFile);
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+                <h3 className="text-lg font-semibold mb-4">Create News</h3>
+
+                {/* Picture */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Picture *</label>
+                <div className="flex flex-col items-center mb-4">
+                    {preview ? (
+                        <img
+                            src={preview}
+                            alt="Preview"
+                            className="w-full h-32 object-cover rounded mb-2"
+                        />
+                    ) : (
+                        <div className="w-full h-32 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-500">
+                            No picture selected
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg"
+                    >
+                        {preview ? "Change Picture" : "Add Picture"}
+                    </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handlePictureChange}
+                    />
+                </div>
+
+                {/* Title */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Category */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <input
+                    type="text"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Location */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                    type="text"
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Startup ID */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Startup ID</label>
+                <input
+                    type="text"
+                    value={form.startup_id}
+                    onChange={(e) => setForm({ ...form, startup_id: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Description */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4 h-24"
+                />
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-2 mt-4">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                    >
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export function ManageNews() {
+    const [news, setNews] = useState<News[]>([]);
+    const [pictures, setPictures] = useState<Record<string, string>>({});
+    const [search, setSearch] = useState("");
+    const [sortKey, setSortKey] = useState<keyof News>("title");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+    const [selectedNews, setSelectedNews] = useState<News | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+
+    useEffect(() => {
+        const fetchAll = async () => {
+            const allNews = await fetchNews();
+            setNews(allNews);
+            const pics: Record<string, string> = {};
+            await Promise.all(allNews.map(async (n) => {
+                const pic = await getNewsPicture(n.uuid);
+                if (pic) {
+                    pics[n.uuid] = pic;
+                }
+            }));
+            setPictures(pics);
+        };
+        fetchAll();
+    }, []);
+
+    const handleSort = (key: keyof News) => {
+        if (sortKey === key) {
+            setSortDir(sortDir === "asc" ? "desc" : "asc");
+        } else {
+            setSortKey(key);
+            setSortDir("asc");
+        }
+    };
+
+    const sortedNews = news
+        .filter((n) => n.title.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            const v1 = (a[sortKey] || "").toString();
+            const v2 = (b[sortKey] || "").toString();
+            if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+            if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+            return 0;
+        });
+
+    const handleCreate = async (form: Omit<News, 'uuid' | 'picture'>, pictureFile: File) => {
+        /*
+        try {
+            const created = await createNews(form, pictureFile);
+            setNews([...news, created]);
+            const pic = await getNewsPicture(created.uuid);
+            if (pic) {
+                setPictures({ ...pictures, [created.uuid]: pic });
+            }
+            setShowCreateModal(false);
+        } catch (err) {
+            console.error("Failed to create news:", err);
+        }
+        */
+    };
+
+    const handleNewsUpdate = async (updatedNews: News) => {
+        try {
+            const updated = await editNews(updatedNews.uuid, updatedNews);
+            setNews(news.map((n) => (n.uuid === updated.uuid ? updated : n)));
+            setSelectedNews(null);
+        } catch (err) {
+            console.error("Failed to update news:", err);
+        }
+    };
+
+    const handlePictureUpdate = (uuid: string, newPicture: string) => {
+        setPictures({ ...pictures, [uuid]: newPicture });
+    };
+
+    const truncateDescription = (description: string) => {
+        return description.length > 32 ? description.substring(0, 150) + "..." : description;
+    };
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Manage News</h2>
+                <div className="flex space-x-2">
+                    <input
+                        type="text"
+                        placeholder="Search news..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border px-3 py-1 rounded-lg"
+                    />
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                    >
+                        + Create News
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sortedNews.map((newsItem) => (
+                    <div key={newsItem.uuid} className="border rounded-lg p-4 shadow bg-white">
+                        {pictures[newsItem.uuid] ? (
+                            <img
+                                src={pictures[newsItem.uuid]}
+                                alt="News"
+                                className="w-full h-32 object-cover rounded mb-2"
+                            />
+                        ) : (
+                            <div className="w-full h-32 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-500">
+                                No picture
+                            </div>
+                        )}
+                        <h3 className="font-semibold">{newsItem.title}</h3>
+                        <p className="text-sm text-gray-500">{newsItem.category}</p>
+                        <p className="text-sm">{newsItem.location}</p>
+                        <p className="text-sm">{truncateDescription(newsItem.description)}</p>
+                        <button
+                            onClick={() => setSelectedNews(newsItem)}
+                            className="mt-2 px-3 py-1 bg-blue-500 text-white rounded-lg"
+                        >
+                            Edit
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            {selectedNews && (
+                <EditNewsModal
+                    news={selectedNews}
+                    currentPicture={pictures[selectedNews.uuid]}
+                    onClose={() => setSelectedNews(null)}
+                    onSave={handleNewsUpdate}
+                    onPictureUpdate={handlePictureUpdate}
+                />
+            )}
+
+            {showCreateModal && (
+                <CreateNewsModal
+                    onClose={() => setShowCreateModal(false)}
+                    onCreate={handleCreate}
+                />
+            )}
+        </div>
+    );
+}
+
+function EditNewsModal({
+                           news,
+                           currentPicture,
+                           onClose,
+                           onSave,
+                           onPictureUpdate,
+                       }: {
+    news: News;
+    currentPicture?: string;
+    onClose: () => void;
+    onSave: (news: News) => void;
+    onPictureUpdate: (uuid: string, newPicture: string) => void;
+}) {
+    const [edited, setEdited] = useState<News>(news);
+    const [saving, setSaving] = useState(false);
+    const [picture, setPicture] = useState<string | null>(currentPicture || null);
+    const [loadingPicture, setLoadingPicture] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (!currentPicture && news.uuid) {
+            setLoadingPicture(true);
+            getNewsPicture(news.uuid).then((pic) => {
+                setPicture(pic);
+                setLoadingPicture(false);
+            });
+        }
+    }, [news.uuid, currentPicture]);
+
+    const handleSave = async () => {
+        setSaving(true);
+        await onSave(edited);
+        setSaving(false);
+    };
+
+    const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!news.uuid || !e.target.files?.[0]) return;
+
+        const file = e.target.files[0];
+
+        try {
+            await updateNewsPicture(news.uuid, file);
+            const objectUrl = URL.createObjectURL(file);
+            setPicture(objectUrl);
+            onPictureUpdate(news.uuid, objectUrl);
+        } catch (err) {
+            console.error("Failed to update news picture:", err);
+            alert("Failed to update picture. Please try again.");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <h3 className="text-lg font-semibold mb-4">Edit News</h3>
+
+                {/* Picture */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Picture</label>
+                <div className="flex flex-col items-center mb-4">
+                    {loadingPicture ? (
+                        <div className="w-full h-32 bg-gray-200 rounded animate-pulse mb-2 flex items-center justify-center">
+                            Loading...
+                        </div>
+                    ) : picture ? (
+                        <img
+                            src={picture}
+                            alt="News"
+                            className="w-full h-32 object-cover rounded mb-2"
+                        />
+                    ) : (
+                        <div className="w-full h-32 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-500">
+                            No picture
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg"
+                    >
+                        {picture ? "Change Picture" : "Add Picture"}
+                    </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handlePictureChange}
+                    />
+                </div>
+
+                {/* Title */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input
+                    type="text"
+                    value={edited.title}
+                    onChange={(e) => setEdited({ ...edited, title: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Category */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <input
+                    type="text"
+                    value={edited.category || ""}
+                    onChange={(e) => setEdited({ ...edited, category: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Location */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                    type="text"
+                    value={edited.location || ""}
+                    onChange={(e) => setEdited({ ...edited, location: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Startup ID */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Startup ID</label>
+                <input
+                    type="text"
+                    value={edited.startup_id || ""}
+                    onChange={(e) => setEdited({ ...edited, startup_id: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Description */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                    value={edited.description || ""}
+                    onChange={(e) => setEdited({ ...edited, description: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4 h-24"
+                />
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-2 mt-4">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                    >
+                        {saving ? "Saving..." : "Save"}
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
 

@@ -24,7 +24,7 @@ export async function fetchEvents(): Promise<Events[]> {
 
 export async function editEvent(id: string, updatedEvent: Partial<Events>): Promise<Events> {
     try {
-        const { uuid, ...dataToSend } = updatedEvent;
+        const {uuid, ...dataToSend} = updatedEvent;
         return await apiClient.patch(`/events/${id}`, JSON.stringify((dataToSend)));
     } catch (error) {
         console.error("Failed to patch event:", error);
@@ -42,7 +42,7 @@ export async function createEvent(newEvent: {
     uuid: string
 }): Promise<Events> {
     try {
-        const { uuid, ...dataToSend } = newEvent;
+        const {uuid, ...dataToSend} = newEvent;
         const response: Events = await apiClient.post(`/events/`, JSON.stringify((dataToSend)));
         return editEvent(response.uuid, dataToSend);
     } catch (error) {
