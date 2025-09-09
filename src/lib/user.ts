@@ -25,8 +25,6 @@ export interface Investor {
 
 export async function getUserInformation() {
   try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
     const response = await apiClient.get("/users/me");
 
     localStorage.setItem("uuid", response.uuid);
@@ -39,8 +37,6 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const response = await apiClient.get("/users/");
 
         return response;
@@ -117,8 +113,6 @@ export async  function handleLogout() {
 
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const response = await apiClient.getRaw(`/users/${uuid}/picture`);
         if (!response.ok) {
             return "";
@@ -155,8 +149,6 @@ export const userDeleteProfilePicture = async (uuid: string) => {
 
 export async function getFounderInfos(uuid: string) {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const response = await apiClient.get(`/founders/${uuid}`);
 
         return response;
@@ -168,8 +160,6 @@ export async function getFounderInfos(uuid: string) {
 
 export async function getInvestorsInfos(uuid: string) {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const response = await apiClient.get(`/investors/${uuid}`);
 
         return response;
