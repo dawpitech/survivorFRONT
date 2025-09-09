@@ -21,8 +21,8 @@ export default function RecentNews({ news }: NewsProps) {
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     <div className="h-32 md:h-40 relative">
                         <Image
-                            src={recentNews[0].image}
-                            alt={recentNews[0].title}
+                            src={`data:image/jpeg;base64,${recentNews[0].image}`}
+                            alt={recentNews[0].title ?? "news image"}
                             fill
                             className="object-cover"
                         />
@@ -40,8 +40,8 @@ export default function RecentNews({ news }: NewsProps) {
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     <div className="h-32 md:h-40 relative">
                         <Image
-                            src={recentNews[1].image}
-                            alt={recentNews[1].title}
+                            src={`data:image/jpeg;base64,${recentNews[1].image}`}
+                            alt={recentNews[1].title ?? "news image"}
                             fill
                             className="object-cover"
                         />
@@ -59,8 +59,8 @@ export default function RecentNews({ news }: NewsProps) {
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                     <div className="h-32 md:h-40 relative">
                         <Image
-                            src={recentNews[2].image}
-                            alt={recentNews[2].title}
+                            src={`data:image/jpeg;base64,${recentNews[2].image}`}
+                            alt={recentNews[2].title ?? "news image"}
                             fill
                             className="object-cover"
                         />

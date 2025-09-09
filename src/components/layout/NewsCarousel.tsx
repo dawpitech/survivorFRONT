@@ -35,7 +35,7 @@ export default function NewsCarousel({ news }: NewsProps) {
                                     <img
                                         src={newsIndex.image}
                                         alt={newsIndex.title}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-fill"
                                     />
                                 </div>
                             </div>
