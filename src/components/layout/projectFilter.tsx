@@ -8,7 +8,6 @@ import {ProjectDetail} from "@/lib/projects";
 
 type Sectors = (string | undefined)[];
 type Maturities = (string | undefined)[];
-type Location = (string | undefined)[];
 
 function getSectors(projects: ProjectDetail[]) {
     const allSectors = projects.map((proj) => proj.sector);
@@ -24,89 +23,7 @@ function getMaturity(projects: ProjectDetail[]) {
     return uniqueMaturity;
 }
 
-function getLocation(projects: ProjectDetail[]) {
-    const allLocation = projects.map((proj) => proj.address);
-    const uniqueLocation = [...new Set(allLocation)];
-    uniqueLocation.push("All")
-    return uniqueLocation;
-}
-
-export function SimpleListLocation({projects, onSectorChange }: {
-    projects: ProjectDetail[],
-    onSectorChange: (sector: string | null) => void
-}) {
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [selectedIndex, setSelectedIndex] = React.useState(1);
-    const open = Boolean(anchorEl);
-
-    const location: Location = getLocation(projects);
-
-    const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuItemClick = (
-        event: React.MouseEvent<HTMLElement>,
-        index: number,
-    ) => {
-        setSelectedIndex(index);
-        setAnchorEl(null);
-        onSectorChange(location[index] ?? null)
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    return (
-        <div>
-            <List
-                component="nav"
-                aria-label="Device settings"
-                sx={{bgcolor: 'background.paper'}}
-            >
-                <ListItemButton
-                    id="lock-button"
-                    aria-haspopup="listbox"
-                    aria-controls="lock-menu"
-                    aria-label="when device is locked"
-                    aria-expanded={open ? 'true' : undefined}
-                    onClick={handleClickListItem}
-                >
-                    <ListItemText
-                        primary="Location"
-                        secondary={location[selectedIndex] || "All"}
-                    />
-                </ListItemButton>
-            </List>
-
-            <Menu
-                id="lock-menu"
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                slotProps={{
-                    list: {
-                        'aria-labelledby': 'lock-button',
-                        role: 'listbox',
-                    },
-                }}
-            >
-                {location.map((loc, index) => (
-                    <MenuItem
-                        key={loc}
-                        selected={index === selectedIndex}
-                        onClick={(event) => handleMenuItemClick(event, index)}
-                    >
-                        {loc}
-                    </MenuItem>
-                ))}
-            </Menu>
-        </div>
-    );
-}
-
-export function SimpleListMaturity({projects, onSectorChange }: {
+export function SimpleListMaturity({projects, onSectorChange}: {
     projects: ProjectDetail[],
     onSectorChange: (sector: string | null) => void
 }) {
@@ -134,23 +51,36 @@ export function SimpleListMaturity({projects, onSectorChange }: {
     };
 
     return (
-        <div>
+        <div className="flex justify-center items-center">
             <List
                 component="nav"
                 aria-label="Device settings"
-                sx={{bgcolor: 'background.paper'}}
             >
                 <ListItemButton
                     id="lock-button"
                     aria-haspopup="listbox"
-                    aria-controls="lock-menu"
-                    aria-label="when device is locked"
                     aria-expanded={open ? 'true' : undefined}
                     onClick={handleClickListItem}
+                    className="text-center justify-center"
+                    sx={{
+                        '&:hover, &:focus, &:active, &.Mui-focusVisible': {
+                            backgroundColor: 'transparent !important',
+                        },
+                        '&::before': {
+                            display: 'none !important',
+                        },
+                        '&::after': {
+                            display: 'none !important',
+                        },
+                        '& .MuiTouchRipple-root': {
+                            display: 'none !important',
+                        }
+                    }}
                 >
                     <ListItemText
-                        primary="Secteur"
+                        primary="Maturity"
                         secondary={maturities[selectedIndex] || "All"}
+                        className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
                 </ListItemButton>
             </List>
@@ -181,7 +111,7 @@ export function SimpleListMaturity({projects, onSectorChange }: {
     );
 }
 
-export default function SimpleListSector({projects, onSectorChange }: {
+export default function SimpleListSector({projects, onSectorChange}: {
     projects: ProjectDetail[],
     onSectorChange: (sector: string | null) => void
 }) {
@@ -209,23 +139,36 @@ export default function SimpleListSector({projects, onSectorChange }: {
     };
 
     return (
-        <div>
+        <div className="flex justify-center items-center">
             <List
                 component="nav"
                 aria-label="Device settings"
-                sx={{bgcolor: 'background.paper'}}
             >
                 <ListItemButton
                     id="lock-button"
                     aria-haspopup="listbox"
-                    aria-controls="lock-menu"
-                    aria-label="when device is locked"
                     aria-expanded={open ? 'true' : undefined}
                     onClick={handleClickListItem}
+                    className="text-center justify-center"
+                    sx={{
+                        '&:hover, &:focus, &:active, &.Mui-focusVisible': {
+                            backgroundColor: 'transparent !important',
+                        },
+                        '&::before': {
+                            display: 'none !important',
+                        },
+                        '&::after': {
+                            display: 'none !important',
+                        },
+                        '& .MuiTouchRipple-root': {
+                            display: 'none !important',
+                        }
+                    }}
                 >
                     <ListItemText
-                        primary="Sectors"
+                        primary="Sector"
                         secondary={sectors[selectedIndex] || "All"}
+                        className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
                 </ListItemButton>
             </List>
