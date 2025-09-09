@@ -149,7 +149,7 @@ export const userDeleteProfilePicture = async (uuid: string) => {
 
 export async function getFounderInfos(uuid: string) {
     try {
-        const response = await apiClient.get(`/founders/${uuid}`);
+        const response = await apiClient.get<FounderDetail>(`/founders/${uuid}`);
 
         return response;
     } catch (err) {
