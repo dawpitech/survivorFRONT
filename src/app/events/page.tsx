@@ -1,26 +1,6 @@
 "use client"
-import { apiClient } from '@/lib/api'
 import React from 'react'
-
-type Events = {
-    id: number
-    name: string,
-    dates?: string,
-    location?: string,
-    description?: string,
-    event_type?: string,
-    target_audience?: string,
-}
-
-async function fetchEvents(): Promise<Events[]> {
-    try {
-        const response: Events[] = await apiClient.get("/events/")
-        return response
-    } catch (error) {
-        console.error("Unable to fetch events from api")
-        return []
-    }
-}
+import {fetchEvents, Events} from '@/lib/events'
 
 export default function EventsPage() {
     const [events, setEvents] = React.useState<Events[]>([])
@@ -56,7 +36,7 @@ export default function EventsPage() {
 
                 <div className="flex-1 space-y-4">
                     {events.map((event: Events) => {
-                        let day = "25"
+                        let day = "31"
                         let month = "Dec"
 
                         if (event.dates) {
