@@ -160,7 +160,7 @@ export async function getFounderInfos(uuid: string) {
 
 export async function getInvestorsInfos(uuid: string) {
     try {
-        const response = await apiClient.get(`/investors/${uuid}`);
+        const response = await apiClient.get<Investor>(`/investors/${uuid}`);
 
         return response;
     } catch (err) {
