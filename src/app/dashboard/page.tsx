@@ -441,11 +441,11 @@ export function ManageUsers() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await getAllUsers() as User[] | { data: User[] };
+                const response = await getAllUsers() as User[];
                 const userData = Array.isArray(response)
                     ? response
-                    : Array.isArray(response.data)
-                        ? response.data
+                    : Array.isArray(response)
+                        ? response
                         : [];
                 setUsers(userData);
             } catch (err) {
