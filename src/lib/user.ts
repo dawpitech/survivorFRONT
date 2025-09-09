@@ -11,8 +11,22 @@ export interface FounderDetail {
     startup: ProjectDetail;
 }
 
+export interface Investor {
+    uuid: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    legal_status?: string;
+    investor_type?: string;
+    investment_focus?: string;
+    description?: string;
+}
+
 export async function getUserInformation() {
   try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
     const response = await apiClient.get("/users/me");
 
     localStorage.setItem("uuid", response.uuid);
@@ -25,6 +39,8 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const response = await apiClient.get("/users/");
 
         return response;
@@ -39,7 +55,7 @@ export async function createUserAdmin() {
   const name = "UserName";
   const role = "investor";
   try {
-    await apiClient.post(
+    const response = await apiClient.post(
       "/users",
       JSON.stringify({ email, name, role }),
     );
@@ -101,6 +117,8 @@ export async  function handleLogout() {
 
 export async function getUserProfilePicture(uuid: string): Promise<string> {
     try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const response = await apiClient.getRaw(`/users/${uuid}/picture`);
         if (!response.ok) {
             return "";
@@ -137,11 +155,37 @@ export const userDeleteProfilePicture = async (uuid: string) => {
 
 export async function getFounderInfos(uuid: string) {
     try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const response = await apiClient.get(`/founders/${uuid}`);
 
         return response;
     } catch (err) {
-        console.error("Fetching all users failed:", err);
+        console.error("Fetching founder failed:", err);
         return [];
+    }
+}
+
+export async function getInvestorsInfos(uuid: string) {
+    try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const response = await apiClient.get(`/investors/${uuid}`);
+
+        return response;
+    } catch (err) {
+        console.error("Fetching investors failed:", err);
+        return [];
+    }
+}
+
+export async function updateInvestorsInfos(uuid: string, updatedData: UpdateUserData) {
+    try {
+
+        const response = await apiClient.patch(`/investors/${uuid}`, JSON.stringify(updatedData));
+        return response.data;
+    } catch (err) {
+        console.error("Failed to update user:", err);
+        throw err;
     }
 }

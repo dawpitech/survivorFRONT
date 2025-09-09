@@ -8,18 +8,12 @@ import {
     updateUserInformation,
     getUserProfilePicture,
     getUserInformation,
-    updateUserPicture, userDeleteProfilePicture, createUser, getFounderInfos, FounderDetail
+    updateUserPicture, userDeleteProfilePicture, createUser, getFounderInfos, FounderDetail, getInvestorsInfos,
+    updateInvestorsInfos, Investor
 } from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 
-type Page = "projects" | "users" | "messages" | "statistics" | "my-startup";
-
-interface Project {
-    id: number;
-    name: string;
-    description: string;
-    image?: string;
-}
+type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos";
 
 export default function DashboardPage() {
     const [activePage, setActivePage] = useState<Page>("messages");
@@ -57,6 +51,11 @@ export default function DashboardPage() {
                                 My Startup
                             </SidebarButton>
                         )}
+                        {userRole === "investor" && (
+                            <SidebarButton page="investor-infos" activePage={activePage} setActivePage={setActivePage}>
+                                Your Informations
+                            </SidebarButton>
+                        )}
 
                         <SidebarButton page="messages" activePage={activePage} setActivePage={setActivePage}>
                             Messages
@@ -73,6 +72,7 @@ export default function DashboardPage() {
                     {activePage === "messages" && <MessagesPage />}
                     {activePage === "statistics" && <div>📊 Statistics dashboard coming soon...</div>}
                     {activePage === "my-startup" && <MyStartupPage />}
+                    {activePage === "investor-infos" && <InvestorInfosPage />}
                 </section>
             </main>
 
@@ -82,6 +82,130 @@ export default function DashboardPage() {
         </>
     );
 }
+
+function InvestorInfosPage() {
+    const [investor, setInvestor] = useState<Investor | null>(null);
+    const [edited, setEdited] = useState<Investor | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [investor_uuid, setInvestor_uuid] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadInvestor = async () => {
+            try {
+                const user = await getUserInformation();
+                if (user?.investor_uuid) {
+                    setInvestor_uuid(user.investor_uuid);
+                    const data = await getInvestorsInfos(user.investor_uuid);
+                    setInvestor(data);
+                    setEdited(data);
+                }
+            } catch (err) {
+                console.error("Failed to load investor infos:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadInvestor();
+    }, []);
+
+    const handleSave = async () => {
+        if (!edited || !investor_uuid) return;
+        setSaving(true);
+        try {
+            await updateInvestorsInfos(investor_uuid, edited as Partial<typeof edited>);
+            setInvestor(edited);
+            setEditing(false);
+        } catch (err) {
+            console.error("Failed to update investor infos:", err);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <div className="p-6">Loading...</div>;
+    if (!investor) return <div className="p-6">No investor information found.</div>;
+
+    const renderField = (
+        label: string,
+        key: keyof Investor,
+        type: "text" | "email" | "tel" | "textarea" = "text"
+    ) => {
+        if (!edited) return null;
+
+        return (
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                {type === "textarea" ? (
+                    <textarea
+                        value={edited[key] || ""}
+                        onChange={(e) => setEdited({ ...edited, [key]: e.target.value })}
+                        className="border rounded px-3 py-2 w-full h-24"
+                        placeholder={label}
+                        disabled={!editing}
+                    />
+                ) : (
+                    <input
+                        type={type}
+                        value={edited[key] || ""}
+                        onChange={(e) => setEdited({ ...edited, [key]: e.target.value })}
+                        className="border rounded px-3 py-2 w-full"
+                        placeholder={label}
+                        disabled={!editing}
+                    />
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-6">Your Informations</h2>
+            <div className="border p-6 rounded-xl shadow-lg bg-white space-y-4">
+                {renderField("Name", "name")}
+                {renderField("Email", "email", "email")}
+                {renderField("Phone", "phone", "tel")}
+                {renderField("Address", "address")}
+                {renderField("Legal Status", "legal_status")}
+                {renderField("Investor Type", "investor_type")}
+                {renderField("Investment Focus", "investment_focus")}
+                {renderField("Description", "description", "textarea")}
+
+                <div className="flex justify-end space-x-3">
+                    {!editing ? (
+                        <button
+                            onClick={() => setEditing(true)}
+                            className="px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white"
+                        >
+                            Edit
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
+                            >
+                                {saving ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setEdited(investor);
+                                    setEditing(false);
+                                }}
+                                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-black"
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 
 function MyStartupPage() {
     const [founder, setFounder] = useState<FounderDetail>();
