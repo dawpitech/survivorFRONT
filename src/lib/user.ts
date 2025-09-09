@@ -25,7 +25,7 @@ export interface Investor {
 
 export async function getUserInformation() {
   try {
-    const response = await apiClient.get<FounderDetail>("/users/me");
+    const response = await apiClient.get("/users/me") as User;
 
     localStorage.setItem("uuid", response.uuid);
     return response;
@@ -37,7 +37,7 @@ export async function getUserInformation() {
 
 export async function getAllUsers() {
     try {
-        const response = await apiClient.get<User[]>("/users/");
+        const response = await apiClient.get("/users/") as User[];
 
         return response;
     } catch (err) {
@@ -149,7 +149,7 @@ export const userDeleteProfilePicture = async (uuid: string) => {
 
 export async function getFounderInfos(uuid: string) {
     try {
-        const response = await apiClient.get<FounderDetail>(`/founders/${uuid}`);
+        const response = await apiClient.get(`/founders/${uuid}`) as FounderDetail;
 
         return response;
     } catch (err) {
@@ -160,7 +160,7 @@ export async function getFounderInfos(uuid: string) {
 
 export async function getInvestorsInfos(uuid: string) {
     try {
-        const response = await apiClient.get<Investor>(`/investors/${uuid}`);
+        const response = await apiClient.get(`/investors/${uuid}`) as Investor;
 
         return response;
     } catch (err) {
