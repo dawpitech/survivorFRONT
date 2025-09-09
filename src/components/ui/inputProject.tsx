@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 
 export function InputProject({ name, value, onChange }: { name:string, value: string, onChange: (val: string) => void }) {
   return (
-    <div className="grid w-full max-w-sm justify-end gap-3 p-[2rem]">
+    <div className="grid max-w-sm gap-3 p-[2rem]">
       <Label>{name}</Label>
       <Input
         value={value}

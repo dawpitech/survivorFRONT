@@ -54,7 +54,7 @@ export default function ProjectPage() {
                         updated with the latest news and events, and join us in fostering
                         innovation and collaboration.{" "}
                     </p>
-                    <div className="w-full max-w-6xl flex justify-end mb-6">
+                    <div className="w-full max-w-6xl flex flex-auto justify-center mb-6">
                         {projects ? <SimpleListSector
                             projects={projects}
                             onSectorChange={setSelectedSector}
