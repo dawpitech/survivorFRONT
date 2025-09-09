@@ -8,11 +8,11 @@ import {
     updateUserInformation,
     getUserProfilePicture,
     getUserInformation,
-    updateUserPicture, userDeleteProfilePicture, createUser
+    updateUserPicture, userDeleteProfilePicture, createUser, getFounderInfos, FounderDetail
 } from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 
-type Page = "projects" | "users" | "messages" | "statistics";
+type Page = "projects" | "users" | "messages" | "statistics" | "my-startup";
 
 interface Project {
     id: number;
@@ -52,6 +52,12 @@ export default function DashboardPage() {
                                 </SidebarButton>
                             </>
                         )}
+                        {userRole === "founder" && (
+                            <SidebarButton page="my-startup" activePage={activePage} setActivePage={setActivePage}>
+                                My Startup
+                            </SidebarButton>
+                        )}
+
                         <SidebarButton page="messages" activePage={activePage} setActivePage={setActivePage}>
                             Messages
                         </SidebarButton>
@@ -66,6 +72,7 @@ export default function DashboardPage() {
                     {activePage === "projects" && <ManageProjects />}
                     {activePage === "messages" && <MessagesPage />}
                     {activePage === "statistics" && <div>📊 Statistics dashboard coming soon...</div>}
+                    {activePage === "my-startup" && <MyStartupPage />}
                 </section>
             </main>
 
@@ -74,6 +81,125 @@ export default function DashboardPage() {
             </footer>
         </>
     );
+}
+
+function MyStartupPage() {
+    const [founder, setFounder] = useState<FounderDetail>();
+    const [loading, setLoading] = useState(true);
+    const [selectedStartup, setSelectedStartup] = useState<ProjectDetail>();
+
+    useEffect(() => {
+        const loadFounder = async () => {
+            try {
+                const user = await getUserInformation();
+                if (user?.founder_uuid) {
+                    const response = await getFounderInfos(user.founder_uuid);
+                    setFounder(response);
+                }
+            } catch (err) {
+                console.error("Failed to load founder infos:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadFounder();
+    }, []);
+
+    const handleProjectUpdate = async (updatedStartup: ProjectDetail) => {
+        try {
+            const { uuid, created_at, ...dataToUpdate } = updatedStartup;
+
+            await updateProject(uuid, dataToUpdate);
+            setFounder((prev) =>
+                prev ? { ...prev, startup: { ...updatedStartup } } : prev
+            );
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            setSelectedStartup(null);
+        } catch (err) {
+            console.error("Failed to update startup:", err);
+        }
+    };
+
+    if (loading) return <div className="p-6">Loading...</div>;
+    if (!founder?.startup) return <div className="p-6">No startup linked to your account.</div>;
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-6">My Startup</h2>
+
+            <div className="border p-6 rounded-xl shadow-lg bg-white">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-2xl font-semibold mb-2">{founder.startup.name}</h3>
+                        <p className="text-gray-700 mb-4">{founder.startup.description}</p>
+                    </div>
+                    <button
+                        onClick={() => setSelectedStartup(founder.startup)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                        Edit
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                        <p><span className="font-medium">Sector:</span> {founder.startup.sector}</p>
+                        <p><span className="font-medium">Maturity:</span> {founder.startup.maturity}</p>
+                        <p><span className="font-medium">Status:</span> {founder.startup.project_status}</p>
+                        <p><span className="font-medium">Legal Status:</span> {founder.startup.legal_status}</p>
+                    </div>
+
+                    <div>
+                        <p><span className="font-medium">Address:</span> {founder.startup.address}</p>
+                        <p><span className="font-medium">Email:</span> {founder.startup.email}</p>
+                        <p><span className="font-medium">Phone:</span> {founder.startup.phone}</p>
+                    </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-4">
+                    {founder.startup.website_url && (
+                        <a
+                            href={founder.startup.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                        >
+                            🌐 Website
+                        </a>
+                    )}
+                    {founder.startup.social_media_url && (
+                        <a
+                            href={founder.startup.social_media_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                        >
+                            🔗 Social Media
+                        </a>
+                    )}
+                </div>
+
+                {founder.startup.needs && (
+                    <div className="mt-6">
+                        <h4 className="font-medium text-gray-800 mb-1">Needs</h4>
+                        <p className="text-gray-700">{founder.startup.needs}</p>
+                    </div>
+                )}
+            </div>
+
+            {selectedStartup && (
+                <ProjectModal
+                    project={selectedStartup}
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-expect-error
+                    onClose={() => setSelectedStartup(null)}
+                    onSave={handleProjectUpdate}
+                />
+            )}
+        </div>
+    );
+
 }
 
 function SidebarButton({
@@ -630,7 +756,7 @@ function ManageProjects() {
     );
 }
 
-function ProjectModal({
+export function ProjectModal({
                           project,
                           onClose,
                           onSave,

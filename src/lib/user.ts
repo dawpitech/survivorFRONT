@@ -1,6 +1,15 @@
 "use client";
 
 import { apiClient } from "@/lib/api";
+import {ProjectDetail} from "@/lib/projects";
+
+export interface FounderDetail {
+    uuid: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    startup: ProjectDetail;
+}
 
 export async function getUserInformation() {
   try {
@@ -131,3 +140,16 @@ export async function updateUserPicture(uuid: string, file: File): Promise<void>
 export const userDeleteProfilePicture = async (uuid: string) => {
     return apiClient.delete(`/users/${uuid}/picture`);
 };
+
+export async function getFounderInfos(uuid: string) {
+    try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const response = await apiClient.get(`/founders/${uuid}`);
+
+        return response;
+    } catch (err) {
+        console.error("Fetching all users failed:", err);
+        return [];
+    }
+}
