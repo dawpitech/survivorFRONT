@@ -9,15 +9,15 @@ export default function EventsPage() {
         async function getEvents() {
             const events: Events[] = await fetchEvents()
             events.sort((a: Events, b: Events) => {
-                if (a.dates && !b.dates)
+                if (a.date && !b.date)
                     return -1
-                if (!a.dates && b.dates)
+                if (!a.date && b.date)
                     return 1
-                if (!a.dates && !b.dates)
+                if (!a.date && !b.date)
                     return 0
 
-                const dateA = new Date(a.dates!)
-                const dateB = new Date(b.dates!)
+                const dateA = new Date(a.date!)
+                const dateB = new Date(b.date!)
                 return dateA.getTime() - dateB.getTime()
             })
             setEvents(events)
@@ -39,9 +39,9 @@ export default function EventsPage() {
                         let day = "31"
                         let month = "Dec"
 
-                        if (event.dates) {
+                        if (event.date) {
                             try {
-                                const date = new Date(event.dates)
+                                const date = new Date(event.date)
                                 day = date.getDate().toString()
                                 month = date.toLocaleDateString('en-US', { month: 'short' })
                             } catch (error) {
