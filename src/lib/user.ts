@@ -25,7 +25,7 @@ export interface Investor {
 
 export async function getUserInformation() {
   try {
-    const response = await apiClient.get("/users/me");
+    const response = await apiClient.get<FounderDetail>("/users/me");
 
     localStorage.setItem("uuid", response.uuid);
     return response;
