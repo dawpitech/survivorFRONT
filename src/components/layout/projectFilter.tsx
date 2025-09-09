@@ -78,7 +78,7 @@ export function SimpleListMaturity({projects, onSectorChange}: {
                     }}
                 >
                     <ListItemText
-                        primary="Maturities"
+                        primary="Maturity"
                         secondary={maturities[selectedIndex] || "All"}
                         className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
@@ -166,7 +166,7 @@ export default function SimpleListSector({projects, onSectorChange}: {
                     }}
                 >
                     <ListItemText
-                        primary="Sectors"
+                        primary="Sector"
                         secondary={sectors[selectedIndex] || "All"}
                         className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
