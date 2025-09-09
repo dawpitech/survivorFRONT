@@ -51,7 +51,7 @@ export async function createUserAdmin() {
   const name = "UserName";
   const role = "investor";
   try {
-    const response = await apiClient.post(
+    await apiClient.post(
       "/users",
       JSON.stringify({ email, name, role }),
     );
