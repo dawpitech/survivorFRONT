@@ -25,8 +25,6 @@ export type ProjectDetail = {
 
 export async function getProjects(): Promise<ProjectDetail[] | null> {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const projectsDetail: ProjectDetail[] = await apiClient.get("/startups/")
         return projectsDetail
     } catch (error) {
@@ -37,8 +35,6 @@ export async function getProjects(): Promise<ProjectDetail[] | null> {
 
 export async function getProjectByUuid(uuid: string): Promise<ProjectDetail | null> {
     try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
         const project: ProjectDetail = await apiClient.get(`/startups/${uuid}`);
         return project;
     } catch (error) {

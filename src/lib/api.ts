@@ -2,7 +2,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:24680/api";
 
 export const apiClient = {
-  get: async (endpoint: string, p0: { responseType: string; }) => {
+  get: async (endpoint: string) => {
     const token = localStorage.getItem("token");
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
@@ -14,7 +14,7 @@ export const apiClient = {
     return response.json();
   },
 
-    getRaw: async (endpoint: string, p0: { responseType: string; }) => {
+    getRaw: async (endpoint: string) => {
         const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             headers: {
