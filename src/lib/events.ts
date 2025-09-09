@@ -3,7 +3,7 @@
 import {apiClient} from '@/lib/api'
 
 export type Events = {
-    id: number
+    uuid: number
     name: string,
     dates?: string,
     location?: string,
@@ -19,5 +19,14 @@ export async function fetchEvents(): Promise<Events[]> {
     } catch (error) {
         console.error("Unable to fetch events from api")
         return []
+    }
+}
+
+export async function editEvent(id: number, updatedEvent: Partial<Events>): Promise<void> {
+    try {
+        const { uuid, ...dataToSend } = updatedEvent;
+        await apiClient.patch(`/events/${id}`, JSON.stringify((dataToSend)));
+    } catch (error) {
+        console.error("Failed to patch event:", error)
     }
 }

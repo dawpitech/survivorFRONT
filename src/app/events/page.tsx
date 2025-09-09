@@ -50,7 +50,7 @@ export default function EventsPage() {
                         }
 
                         return (
-                            <div key={event.id} className="flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div key={event.uuid} className="flex items-center gap-4 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                 <div className="flex flex-col items-center justify-center bg-gray-50 rounded-lg w-16 h-16 flex-shrink-0">
                                     <div className="text-xl font-bold text-gray-800">{day}</div>
                                     <div className="text-sm text-gray-600 uppercase">{month}</div>

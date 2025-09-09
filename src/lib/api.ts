@@ -1,5 +1,5 @@
 const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:24680/api";
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:80/api";
 
 export const apiClient = {
     get: async (endpoint: string) => {
