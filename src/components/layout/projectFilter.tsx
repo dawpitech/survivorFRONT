@@ -51,23 +51,36 @@ export function SimpleListMaturity({projects, onSectorChange}: {
     };
 
     return (
-        <div className="m-[2rem] flex justify-center border border-solid border-gray-200 shadow-lg rounded-2xl">
+        <div className="flex justify-center items-center">
             <List
                 component="nav"
                 aria-label="Device settings"
-                sx={{bgcolor: 'background.paper'}}
             >
                 <ListItemButton
                     id="lock-button"
                     aria-haspopup="listbox"
                     aria-expanded={open ? 'true' : undefined}
                     onClick={handleClickListItem}
-                    className="mx-auto text-center justify-center"
+                    className="text-center justify-center"
+                    sx={{
+                        '&:hover, &:focus, &:active, &.Mui-focusVisible': {
+                            backgroundColor: 'transparent !important',
+                        },
+                        '&::before': {
+                            display: 'none !important',
+                        },
+                        '&::after': {
+                            display: 'none !important',
+                        },
+                        '& .MuiTouchRipple-root': {
+                            display: 'none !important',
+                        }
+                    }}
                 >
                     <ListItemText
                         primary="Maturities"
                         secondary={maturities[selectedIndex] || "All"}
-                        className="text-center"
+                        className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
                 </ListItemButton>
             </List>
@@ -126,23 +139,36 @@ export default function SimpleListSector({projects, onSectorChange}: {
     };
 
     return (
-        <div className="m-[2rem] flex justify-center border border-solid border-gray-200 shadow-lg rounded-2xl">
+        <div className="flex justify-center items-center">
             <List
                 component="nav"
                 aria-label="Device settings"
-                sx={{bgcolor: 'background.paper'}}
             >
                 <ListItemButton
                     id="lock-button"
                     aria-haspopup="listbox"
                     aria-expanded={open ? 'true' : undefined}
                     onClick={handleClickListItem}
-                    className="mx-auto text-center justify-center"
+                    className="text-center justify-center"
+                    sx={{
+                        '&:hover, &:focus, &:active, &.Mui-focusVisible': {
+                            backgroundColor: 'transparent !important',
+                        },
+                        '&::before': {
+                            display: 'none !important',
+                        },
+                        '&::after': {
+                            display: 'none !important',
+                        },
+                        '& .MuiTouchRipple-root': {
+                            display: 'none !important',
+                        }
+                    }}
                 >
                     <ListItemText
                         primary="Sectors"
                         secondary={sectors[selectedIndex] || "All"}
-                        className="text-center"
+                        className="text-center px-6 py-3 rounded-xl border border-gray-200 bg-white"
                     />
                 </ListItemButton>
             </List>

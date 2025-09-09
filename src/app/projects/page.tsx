@@ -1,13 +1,18 @@
 "use client";
 
-import { InputProject } from "@/components/ui/inputProject";
+import {InputProject} from "@/components/ui/inputProject";
 import "../globals.css";
-import { useState, useEffect } from "react";
-import { getProjects, ProjectDetail } from "@/lib/projects";
-import { useRouter } from "next/navigation";
-import { SimpleListMaturity } from "@/components/layout/projectFilter";
+import {useState, useEffect} from "react";
+import {getProjects, ProjectDetail} from "@/lib/projects";
+import {useRouter} from "next/navigation";
+import {SimpleListMaturity} from "@/components/layout/projectFilter";
 import SimpleListSector from "@/components/layout/projectFilter";
-
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function ProjectPage() {
     const router = useRouter();
@@ -54,7 +59,7 @@ export default function ProjectPage() {
                         updated with the latest news and events, and join us in fostering
                         innovation and collaboration.{" "}
                     </p>
-                    <div className="w-full max-w-6xl flex flex-auto justify-center mb-6">
+                    <div className="flex flex-col md:flex-row flex-auto justify-center gap-3 border rounded-xl m-4 bg-gray-50">
                         {projects ? <SimpleListSector
                             projects={projects}
                             onSectorChange={setSelectedSector}
@@ -63,17 +68,18 @@ export default function ProjectPage() {
                             projects={projects}
                             onSectorChange={setSelectedMaturity}
                         /> : null}
-                        <InputProject name="Project Name" value={projectName} onChange={setProjectName} />
-                        <InputProject name="Project Location" value={projectLocation} onChange={setProjectLocation} />
+                        <InputProject name="Project Name" value={projectName} onChange={setProjectName}/>
+                        <InputProject name="Project Location" value={projectLocation} onChange={setProjectLocation}/>
                     </div>
-                    <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
+                    <div
+                        className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
                         {filteredProjects?.map((proj, index) => (
                             <article
                                 key={proj.uuid || index}
                                 className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
                                 onClick={() => handleProjectClick(proj.uuid)}
                             >
-                                <img src={proj.image} alt={proj.name} />
+                                <img src={proj.image} alt={proj.name}/>
                                 <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
                                 <p>{proj.description}</p>
                             </article>
@@ -83,7 +89,8 @@ export default function ProjectPage() {
             </main>
             <footer className="mt-16 pt-8 pb-6 border-t border-gray-200 bg-gray-50">
                 <p className="text-center text-gray-600">© 2025 JEB Incubator</p>
-            </footer>{" "}
+            </footer>
+            {" "}
         </>
     );
 }
