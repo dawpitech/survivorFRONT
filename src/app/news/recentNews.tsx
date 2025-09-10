@@ -1,8 +1,14 @@
 "use client";
 import {News, NewsProps} from "@/app/news/page";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function RecentNews({ news }: NewsProps) {
+    const router = useRouter()
+    const handleNewsClick = (news: News) => {
+        router.push(`news/${news.uuid}`)
+    }
+
     const recentNews = news.slice(0, 3);
 
     if (!recentNews || recentNews.length < 3) {
@@ -17,33 +23,35 @@ export default function RecentNews({ news }: NewsProps) {
                 </h1>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto">
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="h-32 md:h-40 relative">
+                    <div className="h-32 md:h-40 relative hover:grayscale-75">
                         <Image
                             src={`${recentNews[0].image}`}
                             alt={recentNews[0].title ?? "news image"}
                             fill
-                            className="object-cover"
+                            className="object-cover hover:bg-gray-50"
+                            onClick={() => handleNewsClick(recentNews[0])}
                         />
                     </div>
                     <div className="p-4">
                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                            {recentNews[1].title}
+                            {recentNews[0].title}
                         </h3>
                         <p className="text-gray-600 text-sm line-clamp-2">
-                            {recentNews[1].description}
+                            {recentNews[0].description}
                         </p>
                     </div>
                 </article>
 
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="h-32 md:h-40 relative">
+                    <div className="h-32 md:h-40 relative hover:grayscale-75">
                         <Image
                             src={`${recentNews[1].image}`}
                             alt={recentNews[1].title ?? "news image"}
                             fill
-                            className="object-cover"
+                            className="object-cover hover:bg-gray-50"
+                            onClick={() => handleNewsClick(recentNews[1])}
                         />
                     </div>
                     <div className="p-4">
@@ -57,12 +65,13 @@ export default function RecentNews({ news }: NewsProps) {
                 </article>
 
                 <article className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    <div className="h-32 md:h-40 relative">
+                    <div className="h-32 md:h-40 relative hover:grayscale-75">
                         <Image
                             src={`${recentNews[2].image}`}
                             alt={recentNews[2].title ?? "news image"}
                             fill
                             className="object-cover"
+                            onClick={() => handleNewsClick(recentNews[2])}
                         />
                     </div>
                     <div className="p-4">
