@@ -211,7 +211,6 @@ function CreateNewsModal({
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     className="border rounded px-3 py-2 w-full mb-4 h-24"
                 />
-
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-2 mt-4">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
