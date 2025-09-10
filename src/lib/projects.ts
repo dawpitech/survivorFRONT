@@ -19,7 +19,9 @@ export type ProjectDetail = {
     needs?: string;
     image?: string;
     founders?: Array<{
+        uuid?: string;
         name: string;
+        image: string;
     }>;
 };
 
