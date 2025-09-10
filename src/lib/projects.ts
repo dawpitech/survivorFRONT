@@ -14,6 +14,7 @@ export type ProjectDetail = {
     maturity?: string;
     created_at?: string;
     website_url?: string;
+    views_count?: number;
     social_media_url?: string;
     project_status?: string;
     needs?: string;
@@ -48,6 +49,16 @@ export async function getProjectByUuid(uuid: string): Promise<ProjectDetail | nu
 export async function updateProject(uuid: string, updatedData: Partial<ProjectDetail>) {
     try {
         const response = await apiClient.patch(`/startups/${uuid}`, JSON.stringify(updatedData));
+        return response;
+    } catch (err) {
+        console.error("Failed to update project:", err);
+        throw err;
+    }
+}
+
+export async function upProjectStats(uuid: string, updatedData: Partial<ProjectDetail>) {
+    try {
+        const response = await apiClient.patch(`/startups/${uuid}/upViewCount`, JSON.stringify(updatedData));
         return response;
     } catch (err) {
         console.error("Failed to update project:", err);
