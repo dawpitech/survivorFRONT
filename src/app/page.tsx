@@ -6,22 +6,22 @@ import { getProjects, ProjectDetail } from "@/lib/projects";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-    const router = useRouter();
-    const [projects, setProjects] = useState<ProjectDetail[] | null>([])
+  const router = useRouter();
+  const [projects, setProjects] = useState<ProjectDetail[] | null>([]);
 
-    useEffect(() => {
-        const fetchProjects = async () => {
-            const projects = await getProjects()
-            setProjects(projects)
-        }
-        fetchProjects()
-    }, [])
-
-    const handleProjectClick = (uuid: string) => {
-        router.push(`/projects/${uuid}`);
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const projects = await getProjects();
+      setProjects(projects);
     };
+    fetchProjects();
+  }, []);
 
-    const filterProjects: ProjectDetail[] | null = projects?.slice(0, 3) ?? null;
+  const handleProjectClick = (uuid: string) => {
+    router.push(`/projects/${uuid}`);
+  };
+
+  const filterProjects: ProjectDetail[] | null = projects?.slice(0, 3) ?? null;
 
   return (
     <>
@@ -46,24 +46,21 @@ export default function Home() {
 
         <section className="flex flex-col items-center justify-center">
           <h2 className="text-4xl p-[3rem]">Projects</h2>
-            <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
-                {filterProjects?.map((proj, index) => (
-                    <article
-                        key={proj.uuid || index}
-                        className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
-                        onClick={() => handleProjectClick(proj.uuid)}
-                    >
-                        <img src={proj.image} alt={proj.name} />
-                        <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
-                        <p>{proj.description}</p>
-                    </article>
-                ))}
-            </div>
+          <div className="w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
+            {filterProjects?.map((proj, index) => (
+              <article
+                key={proj.uuid || index}
+                className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
+                onClick={() => handleProjectClick(proj.uuid)}
+              >
+                <img src={proj.image} alt={proj.name} />
+                <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
+                <p>{proj.description}</p>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
-      <footer className="mt-16 pt-8 pb-6 border-t border-gray-200 bg-gray-50">
-        <p className="text-center text-gray-600">© 2025 JEB Incubator</p>
-      </footer>{" "}
     </>
   );
 }
