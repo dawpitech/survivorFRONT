@@ -12,7 +12,7 @@ import {
     updateInvestorsInfos, Investor
 } from "@/lib/user";
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
-import {editEvent, Events, fetchEvents} from "@/lib/events";
+import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 
 type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos" | "events";
 
@@ -89,82 +89,192 @@ export default function DashboardPage() {
     );
 }
 
-function ManageEvents() {
-    const [events, setEvents] = useState<Events[]>([])
-    const [search, setSearch] = useState("")
-    const [sortKey, setSortKey] = useState<"name" | "dates" | "location">("name")
-    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
-    const [selectedEvent, setSelectedEvent] = useState<Events | null>(null)
+function CreateEventModal({
+                              onClose,
+                              onCreate,
+                          }: {
+    onClose: () => void;
+    onCreate: (event: Events) => void;
+}) {
+    const [form, setForm] = useState<Events>({
+        uuid: "",
+        name: "",
+        date: "",
+        location: "",
+        description: "",
+        event_type: "",
+        target_audience: "",
+    });
+
+    const handleSubmit = () => {
+        if (!form.name || !form.date || !form.location) {
+            alert("Please fill in all required fields (Name, Date, Location)");
+            return;
+        }
+        onCreate(form);
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+                <h3 className="text-lg font-semibold mb-4">Create Event</h3>
+
+                {/* Event Name */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Name *</label>
+                <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Date */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                <input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Location */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                <input
+                    type="text"
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Event Type */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                <input
+                    type="text"
+                    value={form.event_type}
+                    onChange={(e) => setForm({ ...form, event_type: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Target Audience */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
+                <input
+                    type="text"
+                    value={form.target_audience}
+                    onChange={(e) => setForm({ ...form, target_audience: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4"
+                />
+
+                {/* Description */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="border rounded px-3 py-2 w-full mb-4 h-24"
+                />
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-2 mt-4">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                    >
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export function ManageEvents() {
+    const [events, setEvents] = useState<Events[]>([]);
+    const [search, setSearch] = useState("");
+    const [sortKey, setSortKey] = useState<keyof Events>("name");
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+    const [selectedEvent, setSelectedEvent] = useState<Events | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     useEffect(() => {
-        loadEvents()
-    }, [])
+        const fetchAll = async () => {
+            const allEvents = await fetchEvents();
+            setEvents(allEvents);
+        };
+        fetchAll();
+    }, []);
 
-    const loadEvents = async () => {
-        const data = await fetchEvents()
-        setEvents(data)
-    }
-
-    const handleSort = (key: "name" | "dates" | "location") => {
+    const handleSort = (key: keyof Events) => {
         if (sortKey === key) {
-            setSortDir(sortDir === "asc" ? "desc" : "asc")
+            setSortDir(sortDir === "asc" ? "desc" : "asc");
         } else {
-            setSortKey(key)
-            setSortDir("asc")
+            setSortKey(key);
+            setSortDir("asc");
         }
-    }
+    };
 
-    const filteredEvents = events
-        .filter(e => e.name.toLowerCase().includes(search.toLowerCase()))
+    const sortedEvents = events
+        .filter((e) => e.name.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => {
-            const valA = (a[sortKey] || "").toLowerCase()
-            const valB = (b[sortKey] || "").toLowerCase()
-            if (valA < valB) return sortDir === "asc" ? -1 : 1
-            if (valA > valB) return sortDir === "asc" ? 1 : -1
-            return 0
-        })
+            const v1 = (a[sortKey] || "").toString();
+            const v2 = (b[sortKey] || "").toString();
+            if (v1 < v2) return sortDir === "asc" ? -1 : 1;
+            if (v1 > v2) return sortDir === "asc" ? 1 : -1;
+            return 0;
+        });
 
-    const handleSave = async (updated: Events) => {
-        await editEvent(updated.uuid, updated)
-        setEvents(events.map(e => (e.uuid === updated.uuid ? updated : e)))
-        setSelectedEvent(null)
-    }
+    const handleCreate = async (newEvent: Events) => {
+        try {
+            const created = await createEvent(newEvent);
+            setEvents([...events, created]);
+            setShowCreateModal(false);
+        } catch (err) {
+            console.error("Failed to create event:", err);
+        }
+    };
+
+    const handleEventUpdate = async (updatedEvent: Events) => {
+        try {
+            const updated = await editEvent(updatedEvent.uuid, updatedEvent);
+            setEvents(events.map((e) => (e.uuid === updated.uuid ? updated : e)));
+            setSelectedEvent(null);
+        } catch (err) {
+            console.error("Failed to update event:", err);
+        }
+    };
 
     return (
         <div>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Manage Events</h2>
-                <input
-                    type="text"
-                    placeholder="Search events..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    className="border px-3 py-1 rounded-lg"
-                />
+                <div className="flex space-x-2">
+                    <input
+                        type="text"
+                        placeholder="Search events..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="border px-3 py-1 rounded-lg"
+                    />
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                    >
+                        + Create Event
+                    </button>
+                </div>
             </div>
 
-            <div className="flex space-x-2 mb-4">
-                <button onClick={() => handleSort("name")} className="px-3 py-1 border rounded">
-                    Name {sortKey === "name" ? (sortDir === "asc" ? "↑" : "↓") : ""}
-                </button>
-                <button onClick={() => handleSort("dates")} className="px-3 py-1 border rounded">
-                    Date {sortKey === "dates" ? (sortDir === "asc" ? "↑" : "↓") : ""}
-                </button>
-                <button onClick={() => handleSort("location")} className="px-3 py-1 border rounded">
-                    Location {sortKey === "location" ? (sortDir === "asc" ? "↑" : "↓") : ""}
-                </button>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-                {filteredEvents.map(event => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sortedEvents.map((event) => (
                     <div key={event.uuid} className="border rounded-lg p-4 shadow bg-white">
-                        <h3 className="font-semibold text-lg">{event.name}</h3>
-                        <p className="text-gray-600">{event.dates || "No date provided"}</p>
-                        <p className="text-gray-600">{event.location || "No location"}</p>
-                        <p className="text-sm mt-2">{event.description || "No description"}</p>
+                        <h3 className="font-semibold">{event.name}</h3>
+                        <p className="text-sm text-gray-500">{event.date}</p>
+                        <p className="text-sm">{event.location}</p>
+                        <p className="text-sm">{event.description}</p>
                         <button
                             onClick={() => setSelectedEvent(event)}
-                            className="mt-3 px-3 py-1 bg-blue-500 text-white rounded-lg"
+                            className="mt-2 px-3 py-1 bg-blue-500 text-white rounded-lg"
                         >
                             Edit
                         </button>
@@ -176,11 +286,18 @@ function ManageEvents() {
                 <EditEventModal
                     event={selectedEvent}
                     onClose={() => setSelectedEvent(null)}
-                    onSave={handleSave}
+                    onSave={handleEventUpdate}
+                />
+            )}
+
+            {showCreateModal && (
+                <CreateEventModal
+                    onClose={() => setShowCreateModal(false)}
+                    onCreate={handleCreate}
                 />
             )}
         </div>
-    )
+    );
 }
 
 function EditEventModal({
@@ -219,8 +336,8 @@ function EditEventModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                 <input
                     type="date"
-                    value={edited.dates || ""}
-                    onChange={(e) => setEdited({ ...edited, dates: e.target.value })}
+                    value={edited.date || ""}
+                    onChange={(e) => setEdited({ ...edited, date: e.target.value })}
                     className="border rounded px-3 py-2 w-full mb-4"
                 />
 

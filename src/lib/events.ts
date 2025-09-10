@@ -3,9 +3,9 @@
 import {apiClient} from '@/lib/api'
 
 export type Events = {
-    uuid: number
+    uuid: string
     name: string,
-    dates?: string,
+    date?: string,
     location?: string,
     description?: string,
     event_type?: string,
@@ -22,11 +22,31 @@ export async function fetchEvents(): Promise<Events[]> {
     }
 }
 
-export async function editEvent(id: number, updatedEvent: Partial<Events>): Promise<void> {
+export async function editEvent(id: string, updatedEvent: Partial<Events>): Promise<Events> {
     try {
         const { uuid, ...dataToSend } = updatedEvent;
-        await apiClient.patch(`/events/${id}`, JSON.stringify((dataToSend)));
+        return await apiClient.patch(`/events/${id}`, JSON.stringify((dataToSend)));
+    } catch (error) {
+        console.error("Failed to patch event:", error);
+        throw error;
+    }
+}
+
+export async function createEvent(newEvent: {
+    name: string;
+    date?: string;
+    location?: string;
+    description?: string;
+    event_type?: string;
+    target_audience?: string;
+    uuid: string
+}): Promise<Events> {
+    try {
+        const { uuid, ...dataToSend } = newEvent;
+        const response: Events = await apiClient.post(`/events/`, JSON.stringify((dataToSend)));
+        return editEvent(response.uuid, dataToSend);
     } catch (error) {
         console.error("Failed to patch event:", error)
+        throw error;
     }
 }
