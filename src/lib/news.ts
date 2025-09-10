@@ -7,10 +7,16 @@ export type News = {
     location: string,
     title: string,
     category: string,
-    startup_id: string,
+    startup_uuid: string,
     description: string,
     picture: string,
 }
+
+export type NewNews = {
+    title: string,
+    startup_uuid: string,
+}
+
 
 export async function fetchNews(): Promise<News[]> {
     try {
@@ -61,5 +67,14 @@ export async function updateNewsPicture(uuid: string, file: File): Promise<void>
     } catch (err) {
         console.error(`Failed to update picture for news ${uuid}:`, err);
         throw err;
+    }
+}
+
+export async function createNews(data: { title: string; startup_uuid: string }): Promise<News> {
+    try {
+        return await apiClient.post("/news/", JSON.stringify((data)));
+    } catch (error) {
+        console.error("Failed to create news:", error);
+        throw error;
     }
 }

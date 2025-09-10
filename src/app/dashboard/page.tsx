@@ -20,7 +20,7 @@ import {
 
 import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
-import {editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
+import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 
 type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos" | "events" | "news";
 
@@ -39,56 +39,6 @@ export default function DashboardPage() {
     }
     fetchUser();
   }, []);
-
-  return (
-    <>
-      <main className="flex min-h-screen">
-        <aside className="w-64 bg-gray-100 border-r border-gray-300 p-4 flex flex-col">
-          <h2 className="text-lg font-semibold mb-6">Dashboard</h2>
-          <nav className="flex flex-col gap-2">
-            {userRole === "admin" && (
-              <>
-                <SidebarButton
-                  page="projects"
-                  activePage={activePage}
-                  setActivePage={setActivePage}
-                >
-                  Manage Startups
-                </SidebarButton>
-                <SidebarButton
-                  page="users"
-                  activePage={activePage}
-                  setActivePage={setActivePage}
-                >
-                  Manage Users
-                </SidebarButton>
-                <SidebarButton
-                  page="events"
-                  activePage={activePage}
-                  setActivePage={setActivePage}
-                >
-                  Manage Events
-                </SidebarButton>
-              </>
-            )}
-            {userRole === "founder" && (
-              <SidebarButton
-                page="my-startup"
-                activePage={activePage}
-                setActivePage={setActivePage}
-              >
-                My Startup
-              </SidebarButton>
-            )}
-            {userRole === "investor" && (
-              <SidebarButton
-                page="investor-infos"
-                activePage={activePage}
-                setActivePage={setActivePage}
-              >
-                Your Informations
-              </SidebarButton>
-            )}
 
     return (
         <>
@@ -148,10 +98,6 @@ export default function DashboardPage() {
                     {activePage === "investor-infos" && <InvestorInfosPage />}
                 </section>
             </main>
-
-            <footer className="mt-16 pt-8 pb-6 border-t border-gray-200 bg-gray-50">
-                <p className="text-center text-gray-600">© 2025 JEB Incubator</p>
-            </footer>
         </>
     );
 }
@@ -167,24 +113,59 @@ function CreateNewsModal({
         title: "",
         location: "",
         category: "",
-        startup_id: "",
+        startup_uuid: "",
         description: "",
     });
     const [pictureFile, setPictureFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [startups, setStartups] = useState<ProjectDetail[]>([]);
+    const [userRole, setUserRole] = useState<"admin" | "founder" | "investor" | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const user = await getUserInformation();
+                if (user === "") return;
+                setUserRole(user.role);
+
+                if (user.role === "admin") {
+                    const projects = await getProjects() as ProjectDetail[];
+                    setStartups(projects || []);
+                } else if (user.role === "founder") {
+                    const founder = await getFounderInfos(user.founder_uuid || "");
+                    if (Array.isArray(founder))
+                        return;
+                    if (founder.startup.uuid) {
+                        setForm(prev => ({ ...prev, startup_uuid: founder.startup.uuid }));
+                        setStartups([founder.startup]);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     const handlePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
             const file = e.target.files[0];
+
+            if (file.type !== "image/png") {
+                alert("Only PNG files are allowed.");
+                e.target.value = ""; // reset input
+                return;
+            }
+
             setPictureFile(file);
             setPreview(URL.createObjectURL(file));
         }
     };
 
     const handleSubmit = () => {
-        if (!form.title || !form.category || !pictureFile) {
-            alert("Please fill in all required fields (Title, Category, Picture)");
+        if (!form.title || !form.category || !form.startup_uuid || !pictureFile) {
+            alert("Please fill in all required fields (Title, Category, Startup, Picture)");
             return;
         }
         onCreate(form, pictureFile);
@@ -196,7 +177,7 @@ function CreateNewsModal({
                 <h3 className="text-lg font-semibold mb-4">Create News</h3>
 
                 {/* Picture */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">Picture *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Picture (PNG only) *</label>
                 <div className="flex flex-col items-center mb-4">
                     {preview ? (
                         <img
@@ -218,7 +199,7 @@ function CreateNewsModal({
                     </button>
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png"
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handlePictureChange}
@@ -252,14 +233,30 @@ function CreateNewsModal({
                     className="border rounded px-3 py-2 w-full mb-4"
                 />
 
-                {/* Startup ID */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">Startup ID</label>
-                <input
-                    type="text"
-                    value={form.startup_id}
-                    onChange={(e) => setForm({ ...form, startup_id: e.target.value })}
-                    className="border rounded px-3 py-2 w-full mb-4"
-                />
+                {/* Startup Selection */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Startup *</label>
+                {userRole === "founder" ? (
+                    <input
+                        type="text"
+                        value={startups[0]?.name || ""}
+                        disabled
+                        className="border rounded px-3 py-2 w-full mb-4 bg-gray-100"
+                    />
+                ) : (
+                    <select
+                        value={form.startup_uuid}
+                        onChange={(e) => setForm({ ...form, startup_uuid: e.target.value })}
+                        className="border rounded px-3 py-2 w-full mb-4"
+                        disabled={userRole !== "admin"}
+                    >
+                        <option value="">Select a startup</option>
+                        {startups.map((startup) => (
+                            <option key={startup.uuid} value={startup.uuid}>
+                                {startup.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
 
                 {/* Description */}
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -268,6 +265,7 @@ function CreateNewsModal({
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     className="border rounded px-3 py-2 w-full mb-4 h-24"
                 />
+
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-2 mt-4">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg">
@@ -293,21 +291,45 @@ export function ManageNews() {
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [selectedNews, setSelectedNews] = useState<News | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [userRole, setUserRole] = useState<"admin" | "founder" | "investor" | null>(null);
+    const [userStartupUuid, setUserStartupUuid] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchAll = async () => {
-            const allNews = await fetchNews();
-            setNews(allNews);
-            const pics: Record<string, string> = {};
-            await Promise.all(allNews.map(async (n) => {
-                const pic = await getNewsPicture(n.uuid);
-                if (pic) {
-                    pics[n.uuid] = pic;
+        const fetchData = async () => {
+            try {
+                const user = await getUserInformation();
+                if (user === "") return;
+                setUserRole(user.role);
+
+                const allNews = await fetchNews();
+                let filteredNews = allNews;
+                if (user.role === "founder") {
+                    const founder = await getFounderInfos(user.founder_uuid || "");
+                    if (!Array.isArray(founder) && founder.startup) {
+                        setUserStartupUuid(founder.startup.uuid);
+                    }
+                    if (Array.isArray(founder)) {
+                        return;
+                    }
+                    filteredNews = user.role === "founder"
+                        ? allNews.filter(n => n.startup_uuid === founder.startup.uuid)
+                        : allNews;
                 }
-            }));
-            setPictures(pics);
+
+                setNews(filteredNews);
+                const pics: Record<string, string> = {};
+                await Promise.all(filteredNews.map(async (n) => {
+                    const pic = await getNewsPicture(n.uuid);
+                    if (pic) {
+                        pics[n.uuid] = pic;
+                    }
+                }));
+                setPictures(pics);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
         };
-        fetchAll();
+        fetchData();
     }, []);
 
     const handleSort = (key: keyof News) => {
@@ -329,26 +351,54 @@ export function ManageNews() {
             return 0;
         });
 
-    const handleCreate = async (form: Omit<News, 'uuid' | 'picture'>, pictureFile: File) => {
-        /*
+    const handleCreate = async (
+        form: Omit<News, "uuid" | "picture">,
+        pictureFile: File
+    ) => {
         try {
-            const created = await createNews(form, pictureFile);
-            setNews([...news, created]);
-            const pic = await getNewsPicture(created.uuid);
-            if (pic) {
-                setPictures({ ...pictures, [created.uuid]: pic });
+            const newNews = await createNews({
+                title: form.title,
+                startup_uuid: form.startup_uuid,
+            });
+
+            const created = await editNews(newNews.uuid, {
+                category: form.category,
+                description: form.description,
+                location: form.location,
+            });
+
+            await updateNewsPicture(newNews.uuid, pictureFile);
+            const pic = await getNewsPicture(newNews.uuid);
+
+            console.log("News successfully created:", newNews.uuid);
+
+            // Only add to news list if it matches the founder's startup_uuid
+            if (userRole !== "founder" || newNews.startup_uuid === userStartupUuid) {
+                setNews((prev) => [...prev, created]);
+                setPictures((prev) => ({
+                    ...prev,
+                    [newNews.uuid]: pic,
+                }));
             }
+
             setShowCreateModal(false);
-        } catch (err) {
-            console.error("Failed to create news:", err);
+            return newNews.uuid;
+        } catch (error) {
+            console.error("Failed to create news:", error);
+            throw error;
         }
-        */
     };
 
     const handleNewsUpdate = async (updatedNews: News) => {
         try {
             const updated = await editNews(updatedNews.uuid, updatedNews);
-            setNews(news.map((n) => (n.uuid === updated.uuid ? updated : n)));
+            // Only update news list if it matches the founder's startup_uuid
+            if (userRole !== "founder" || updated.startup_uuid === userStartupUuid) {
+                setNews(news.map((n) => (n.uuid === updated.uuid ? updated : n)));
+            } else {
+                // If the updated news no longer matches the founder's startup, remove it
+                setNews(news.filter((n) => n.uuid !== updated.uuid));
+            }
             setSelectedNews(null);
         } catch (err) {
             console.error("Failed to update news:", err);
@@ -373,7 +423,7 @@ export function ManageNews() {
                         placeholder="Search news..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="border px-3 py-1 rounded-lg"
+                        className="border px-3 py-2 rounded-lg"
                     />
                     <button
                         onClick={() => setShowCreateModal(true)}
@@ -449,7 +499,42 @@ function EditNewsModal({
     const [saving, setSaving] = useState(false);
     const [picture, setPicture] = useState<string | null>(currentPicture || null);
     const [loadingPicture, setLoadingPicture] = useState(false);
+    const [startups, setStartups] = useState<ProjectDetail[]>([]);
+    const [userRole, setUserRole] = useState<"admin" | "founder" | "investor" | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const user = await getUserInformation();
+                if (user === "") return;
+                setUserRole(user.role);
+
+                if (user.role === "admin") {
+                    const projects = await getProjects() as ProjectDetail[];
+                    setStartups(projects || []);
+                } else if (user.role === "founder") {
+                    const founder = await getFounderInfos(user.founder_uuid || "");
+                    if (!Array.isArray(founder) && founder.startup) {
+                        setStartups([founder.startup]);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const handleSave = async () => {
+        if (!edited.title || !edited.category || !edited.startup_uuid) {
+            alert("Please fill in all required fields (Title, Category, Startup)");
+            return;
+        }
+        setSaving(true);
+        await onSave(edited);
+        setSaving(false);
+    };
 
     useEffect(() => {
         if (!currentPicture && news.uuid) {
@@ -460,12 +545,6 @@ function EditNewsModal({
             });
         }
     }, [news.uuid, currentPicture]);
-
-    const handleSave = async () => {
-        setSaving(true);
-        await onSave(edited);
-        setSaving(false);
-    };
 
     const handlePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!news.uuid || !e.target.files?.[0]) return;
@@ -489,7 +568,7 @@ function EditNewsModal({
                 <h3 className="text-lg font-semibold mb-4">Edit News</h3>
 
                 {/* Picture */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">Picture</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Picture (PNG only)</label>
                 <div className="flex flex-col items-center mb-4">
                     {loadingPicture ? (
                         <div className="w-full h-32 bg-gray-200 rounded animate-pulse mb-2 flex items-center justify-center">
@@ -515,7 +594,7 @@ function EditNewsModal({
                     </button>
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/png"
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handlePictureChange}
@@ -532,7 +611,7 @@ function EditNewsModal({
                 />
 
                 {/* Category */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                 <input
                     type="text"
                     value={edited.category || ""}
@@ -549,16 +628,32 @@ function EditNewsModal({
                     className="border rounded px-3 py-2 w-full mb-4"
                 />
 
-                {/* Startup ID */}
-                <label className="block text-sm font-medium text-gray-700 mb-1">Startup ID</label>
-                <input
-                    type="text"
-                    value={edited.startup_id || ""}
-                    onChange={(e) => setEdited({ ...edited, startup_id: e.target.value })}
-                    className="border rounded px-3 py-2 w-full mb-4"
-                />
+                {/* Startup Selection */}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Startup *</label>
+                {userRole === "founder" ? (
+                    <input
+                        type="text"
+                        value={startups[0]?.name || ""}
+                        disabled
+                        className="border rounded px-3 py-2 w-full mb-4 bg-gray-100"
+                    />
+                ) : (
+                    <select
+                        value={edited.startup_uuid}
+                        onChange={(e) => setEdited({ ...edited, startup_uuid: e.target.value })}
+                        className="border rounded px-3 py-2 w-full mb-4"
+                        disabled={userRole !== "admin"}
+                    >
+                        <option value="">Select a startup</option>
+                        {startups.map((startup) => (
+                            <option key={startup.uuid} value={startup.uuid}>
+                                {startup.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
 
-                {/* Description */}
+                {/*-log Description */}
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                     value={edited.description || ""}
