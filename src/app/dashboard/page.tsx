@@ -22,7 +22,7 @@ import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 
-type Page = "projects" | "users" | "messages" | "statistics" | "my-startup" | "investor-infos" | "events" | "news";
+type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news";
 
 export default function DashboardPage() {
   const [activePage, setActivePage] = useState<Page>("messages");
@@ -81,9 +81,6 @@ export default function DashboardPage() {
                         <SidebarButton page="messages" activePage={activePage} setActivePage={setActivePage}>
                             Messages
                         </SidebarButton>
-                        <SidebarButton page="statistics" activePage={activePage} setActivePage={setActivePage}>
-                            Statistics
-                        </SidebarButton>
                     </nav>
                 </aside>
 
@@ -93,7 +90,6 @@ export default function DashboardPage() {
                     {activePage === "news" && <ManageNews />}
                     {activePage === "events" && <ManageEvents />}
                     {activePage === "messages" && <MessagesPage />}
-                    {activePage === "statistics" && <div>📊 Statistics dashboard coming soon...</div>}
                     {activePage === "my-startup" && <MyStartupPage />}
                     {activePage === "investor-infos" && <InvestorInfosPage />}
                 </section>
@@ -1209,10 +1205,16 @@ function MyStartupPage() {
       <div className="border p-6 rounded-xl shadow-lg bg-white">
         <div className="flex justify-between items-start">
           <div>
+              <h3 className="text-2xl font-semibold mb-2">
+                  {founder.startup.name}
+              </h3>
+              <p className="text-gray-700 mb-3">
+                  👀 {founder.startup.views_count ?? 0} views
+              </p>
+              <p className="text-gray-700 mb-4">{founder.startup.description}</p>
             <h3 className="text-2xl font-semibold mb-2">
               {founder.startup.name}
             </h3>
-            <p className="text-gray-700 mb-4">{founder.startup.description}</p>
           </div>
           <button
             onClick={() => setSelectedStartup(founder.startup)}
@@ -1751,43 +1753,65 @@ function ManageProjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<"name" | "views_count">("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedProject, setSelectedProject] = useState<ProjectDetail | null>(
     null,
   );
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+    useEffect(() => {
+        loadProjects();
+    }, []);
 
-  const loadProjects = async () => {
-    try {
-      setLoading(true);
-      const fetchedProjects = await getProjects();
-      if (fetchedProjects) {
-        setProjects(fetchedProjects);
-      } else {
-        setError("Failed to load projects");
-      }
-    } catch (err) {
-      setError("An error occurred while loading projects");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadProjects = async () => {
+        try {
+            setLoading(true);
+            const fetchedProjects = await getProjects();
+            if (fetchedProjects) {
+                setProjects(fetchedProjects);
+            } else {
+                setError("Failed to load projects");
+            }
+        } catch (err) {
+            setError("An error occurred while loading projects");
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleSort = () => {
-    setSortDir(sortDir === "asc" ? "desc" : "asc");
-  };
+    const handleSort = () => {
+        if (sortKey === "name") {
+            setSortDir(sortDir === "asc" ? "desc" : "asc");
+        } else {
+            setSortKey("name");
+            setSortDir("asc");
+        }
+    };
 
-  const filteredProjects = projects
-    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (a.name < b.name) return sortDir === "asc" ? -1 : 1;
-      if (a.name > b.name) return sortDir === "asc" ? 1 : -1;
-      return 0;
-    });
+    const handleViewSort = () => {
+        if (sortKey === "views_count") {
+            setSortDir(sortDir === "asc" ? "desc" : "asc");
+        } else {
+            setSortKey("views_count");
+            setSortDir("desc"); // Default to descending for view count (highest first)
+        }
+    };
+
+    const filteredProjects = projects
+        .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            if (sortKey === "name") {
+                if (a.name < b.name) return sortDir === "asc" ? -1 : 1;
+                if (a.name > b.name) return sortDir === "asc" ? 1 : -1;
+                return 0;
+            } else if (sortKey === "views_count") {
+                const aViews = a.views_count || 0;
+                const bViews = b.views_count || 0;
+                return sortDir === "asc" ? aViews - bViews : bViews - aViews;
+            }
+            return 0;
+        });
 
   const handleProjectUpdate = async (updatedProject: ProjectDetail) => {
     try {
@@ -1844,6 +1868,9 @@ function ManageProjects() {
             <th className="p-2 border cursor-pointer" onClick={handleSort}>
               Name {sortDir === "asc" ? "↑" : "↓"}
             </th>
+              <th className="p-2 border cursor-pointer" onClick={handleViewSort}>
+                  Views {sortDir === "asc" ? "↑" : "↓"}
+              </th>
             <th className="p-2 border">Sector</th>
             <th className="p-2 border">Maturity</th>
             <th className="p-2 border">Status</th>
@@ -1858,6 +1885,7 @@ function ManageProjects() {
               onClick={() => setSelectedProject(p)}
             >
               <td className="p-2 border font-medium">{p.name}</td>
+                <td className="p-2 border font-medium">{p.views_count?.toString()}</td>
               <td className="p-2 border">{p.sector || "-"}</td>
               <td className="p-2 border">{p.maturity || "-"}</td>
               <td className="p-2 border">{p.project_status || "-"}</td>
