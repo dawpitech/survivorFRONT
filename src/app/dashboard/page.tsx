@@ -1,44 +1,58 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import {useState, useRef, useEffect, useMemo} from "react";
 import "../globals.css";
 import {
-  getAllUsers,
-  User,
-  updateUserInformation,
-  getUserProfilePicture,
-  getUserInformation,
-  updateUserPicture,
-  userDeleteProfilePicture,
-  createUser,
-  getFounderInfos,
-  FounderDetail,
-  getInvestorsInfos,
-  updateInvestorsInfos,
-  Investor,
+    getAllUsers,
+    User,
+    updateUserInformation,
+    getUserProfilePicture,
+    getUserInformation,
+    updateUserPicture,
+    userDeleteProfilePicture,
+    createUser,
+    getFounderInfos,
+    FounderDetail,
+    getInvestorsInfos,
+    updateInvestorsInfos,
+    Investor,
 } from "@/lib/user";
 
 import {getProjects, ProjectDetail, updatePitchDeck, updateProject} from "@/lib/projects";
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
+import {ChatMessage, ChatRoom, createRoom, fetchRoomMessages, fetchRooms, sendMessage} from "@/lib/chat";
 
 type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news" | "stats";
 
-export default function DashboardPage() {
-  const [activePage, setActivePage] = useState<Page>("messages");
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const user = await getUserInformation();
-      if (user == "") return;
-      if (user?.role) {
-        setUserRole(user.role);
-        setActivePage(user.role === "admin" ? "users" : "messages");
-      }
+const __prefetchUserInfo = (async () => {
+    try {
+        const user = await getUserInformation();
+        if (user === "" || !user) {
+            window.location.href = "/";
+        }
+        return user;
+    } catch {
+        window.location.href = "/";
+        return "";
     }
-    fetchUser();
-  }, []);
+})();
+
+export default function DashboardPage() {
+    const [activePage, setActivePage] = useState<Page>("messages");
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function fetchUser() {
+            const user = await __prefetchUserInfo;
+            if (user == "") return;
+            if (user?.role) {
+                setUserRole(user.role);
+                setActivePage(user.role === "admin" ? "users" : "messages");
+            }
+        }
+        fetchUser();
+    }, []);
 
     return (
         <>
@@ -2213,63 +2227,612 @@ export function ProjectModal({
   );
 }
 
-function MessagesPage() {
-  return (
-    <div className="flex border rounded-lg shadow h-[600px]">
-      <div className="w-1/4 border-r p-2 bg-gray-50">
-        <h3 className="font-semibold mb-4">Discussions</h3>
-        <div className="space-y-2">
-          <button className="w-full text-left px-3 py-2 rounded-lg bg-red-200">
-            John Doe
-          </button>
-          <button className="w-full text-left px-3 py-2 rounded-lg border">
-            Daniel Cotton
-          </button>
-          <button className="w-full text-left px-3 py-2 rounded-lg border">
-            Elon Musk
-          </button>
-        </div>
-      </div>
+type RecipientOption = {
+    user: User;
+    label: string;
+};
 
-      <div className="flex-1 flex flex-col">
-        <div className="p-3 border-b bg-gray-100 font-semibold">John Doe</div>
+function useUsersDirectory() {
+    const [users, setUsers] = useState<User[]>([]);
+    const [usersById, setUsersById] = useState<Record<string, User>>({});
+    const [loading, setLoading] = useState(true);
 
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          <div className="flex flex-col items-start">
-            <div className="bg-blue-100 px-3 py-2 rounded-lg max-w-xs">
-              Hey! Are we still on for tomorrow?
+    useEffect(() => {
+        (async () => {
+            try {
+                const all = (await getAllUsers()) || [];
+                setUsers(all);
+                const map: Record<string, User> = {};
+                for (const u of all) map[u.uuid] = u;
+                setUsersById(map);
+            } catch (e) {
+                console.error("Failed to load users directory:", e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    return { users, usersById, loading };
+}
+
+function NewConversationModal({
+                                  open,
+                                  onClose,
+                                  currentUser,
+                                  role,
+                                  onCreated,
+                              }: {
+    open: boolean;
+    onClose: () => void;
+    currentUser: User | null;
+    role: User["role"];
+    onCreated: (room: ChatRoom) => void;
+}) {
+    const { users } = useUsersDirectory();
+    const [loadingChoices, setLoadingChoices] = useState(true);
+    const [choices, setChoices] = useState<RecipientOption[]>([]);
+    const [selectedUuid, setSelectedUuid] = useState<string>("");
+
+    useEffect(() => {
+        if (!open) return;
+        (async () => {
+            setLoadingChoices(true);
+            try {
+                if (role === "investor") {
+                    const founders = users.filter((u) => u.role === "founder" && !!u.founder_uuid);
+                    const options: RecipientOption[] = [];
+                    for (const fu of founders) {
+                        if (!fu.founder_uuid) continue;
+                        const fd = (await getFounderInfos(fu.founder_uuid)) as FounderDetail | FounderDetail[];
+                        if (Array.isArray(fd)) continue;
+                        const startupName = fd?.startup?.name ?? "No startup";
+                        options.push({
+                            user: fu,
+                            label: `${fu.name} — ${startupName}`,
+                        });
+                    }
+                    setChoices(
+                        options.sort((a, b) => a.label.localeCompare(b.label)),
+                    );
+                } else if (role === "admin") {
+                    const options: RecipientOption[] = users
+                        .filter((u) => u.uuid !== currentUser?.uuid)
+                        .map((u) => ({
+                            user: u,
+                            label: `${u.name} — ${u.role}`,
+                        }))
+                        .sort((a, b) => a.label.localeCompare(b.label));
+                    setChoices(options);
+                } else {
+                    setChoices([]);
+                }
+            } catch (e) {
+                console.error("Failed to build choices:", e);
+                setChoices([]);
+            } finally {
+                setLoadingChoices(false);
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, role, users, currentUser?.uuid]);
+
+    const handleCreate = async () => {
+        if (!selectedUuid || !currentUser) return;
+        try {
+            const room = await createRoom({
+                first_party_uuid: currentUser.uuid,
+                second_party_uuid: selectedUuid,
+            });
+            onCreated(room);
+            onClose();
+        } catch {
+        }
+    };
+
+    if (!open) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+                <h3 className="text-lg font-semibold mb-4">Start a new conversation</h3>
+                {loadingChoices ? (
+                    <div className="text-gray-600">Loading choices...</div>
+                ) : choices.length === 0 ? (
+                    <div className="text-gray-600">No available recipients.</div>
+                ) : (
+                    <>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Select recipient
+                        </label>
+                        <select
+                            className="border rounded px-3 py-2 w-full mb-4"
+                            value={selectedUuid}
+                            onChange={(e) => setSelectedUuid(e.target.value)}
+                        >
+                            <option value="">Choose...</option>
+                            {choices.map((c) => (
+                                <option key={c.user.uuid} value={c.user.uuid}>
+                                    {c.label}
+                                </option>
+                            ))}
+                        </select>
+                    </>
+                )}
+
+                <div className="flex justify-end gap-2">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gray-300">
+                        Cancel
+                    </button>
+                    <button
+                        disabled={!selectedUuid || !currentUser}
+                        onClick={handleCreate}
+                        className="px-4 py-2 rounded-lg bg-green-500 text-white disabled:opacity-50"
+                    >
+                        Create
+                    </button>
+                </div>
             </div>
-            <div className="text-xs text-gray-500 mt-1">10:45 AM</div>
-          </div>
-
-          <div className="flex flex-col items-end">
-            <div className="bg-green-100 px-3 py-2 rounded-lg max-w-xs">
-              Yes, looking forward to it!
-            </div>
-            <div className="text-xs text-gray-500 mt-1">10:46 AM</div>
-          </div>
-
-          <div className="flex flex-col items-start">
-            <div className="bg-blue-100 px-3 py-2 rounded-lg max-w-xs">
-              Great! See you then.
-            </div>
-            <div className="text-xs text-gray-500 mt-1">10:47 AM</div>
-          </div>
         </div>
+    );
+}
 
-        <div className="flex border-t p-2">
-          <input
-            type="text"
-            placeholder="Type your message..."
-            className="flex-1 border rounded-lg px-3 py-2 mr-2"
-          />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-            Send
-          </button>
+function MessageBubble({
+                           msg,
+                           isMe,
+                       }: {
+    msg: ChatMessage;
+    isMe: boolean;
+}) {
+    const time = useMemo(() => {
+        try {
+            return new Date(msg.sent_at).toLocaleString();
+        } catch {
+            return msg.sent_at;
+        }
+    }, [msg.sent_at]);
+
+    return (
+        <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+            <div
+                className={`px-3 py-2 rounded-lg max-w-xs break-words ${
+                    isMe ? "bg-green-100" : "bg-blue-100"
+                }`}
+            >
+                {msg.content}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">{time}</div>
         </div>
-      </div>
-    </div>
-  );
+    );
+}
+
+function RoomListItem({
+                          room,
+                          meUuid,
+                          usersById,
+                          selected,
+                          onClick,
+                          isAdminViewer,
+                          unread,
+                      }: {
+    room: ChatRoom;
+    meUuid: string;
+    usersById: Record<string, User>;
+    selected: boolean;
+    onClick: () => void;
+    isAdminViewer: boolean;
+    unread: boolean;
+}) {
+    const meIsParty =
+        room.first_party_uuid === meUuid || room.second_party_uuid === meUuid;
+
+    let title = "";
+    if (meIsParty) {
+        const otherUuid =
+            room.first_party_uuid === meUuid
+                ? room.second_party_uuid
+                : room.first_party_uuid;
+        const other = usersById[otherUuid];
+        title = other ? other.name : "Unknown user";
+    } else {
+        const u1 = usersById[room.first_party_uuid]?.name ?? room.first_party_uuid;
+        const u2 = usersById[room.second_party_uuid]?.name ?? room.second_party_uuid;
+        title = isAdminViewer ? `${u1} ↔ ${u2}` : "Unknown room";
+    }
+
+    return (
+        <button
+            onClick={onClick}
+            className={`w-full text-left px-3 py-2 rounded-lg ${
+                selected ? "bg-blue-200" : "hover:bg-gray-100"
+            }`}
+        >
+            <div className="flex items-center justify-between">
+                <span>{title}</span>
+                {unread && <span className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500" />}
+            </div>
+        </button>
+    );
+}
+
+export function MessagesPage() {
+    const [me, setMe] = useState<User | null>(null);
+    const [role, setRole] = useState<User["role"] | null>(null);
+
+    const { users, usersById, loading: loadingUsers } = useUsersDirectory();
+
+    const [rooms, setRooms] = useState<ChatRoom[]>([]);
+    const [loadingRooms, setLoadingRooms] = useState(true);
+
+    const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [initialLoading, setInitialLoading] = useState(false);
+
+    const [newMessage, setNewMessage] = useState("");
+    const [creatingConversation, setCreatingConversation] = useState(false);
+
+    const [unreadRoomSet, setUnreadRoomSet] = useState<Set<string>>(new Set());
+    const [lastSeenByRoom, setLastSeenByRoom] = useState<Record<string, number>>({});
+    const [latestMsgTimeByRoom, setLatestMsgTimeByRoom] = useState<Record<string, number>>({});
+
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const prevMsgCountRef = useRef(0);
+
+    const scrollToBottom = (smooth = true) => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+                behavior: smooth ? "smooth" : "auto",
+                block: "end",
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (messages.length > prevMsgCountRef.current) {
+            scrollToBottom(true);
+        }
+        prevMsgCountRef.current = messages.length;
+    }, [messages.length]);
+
+    const canCreateConversation =
+        role === "admin" || role === "investor";
+
+    const meUuid = me?.uuid ?? "";
+
+    useEffect(() => {
+        (async () => {
+            const user = await getUserInformation();
+            if (user === "") return;
+            setMe(user);
+            setRole(user.role);
+        })();
+    }, []);
+
+    const loadRooms = async () => {
+        setLoadingRooms(true);
+        try {
+            const all = await fetchRooms();
+            let visible = all;
+            if (role !== "admin" && meUuid) {
+                visible = all.filter(
+                    (r) => r.first_party_uuid === meUuid || r.second_party_uuid === meUuid,
+                );
+            }
+            setRooms(visible);
+            if (!selectedRoom && visible.length > 0) {
+                setSelectedRoom(visible[0]);
+            }
+        } catch (e) {
+        } finally {
+            setLoadingRooms(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!meUuid || !role) return;
+        loadRooms();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [meUuid, role]);
+
+    const mergeMessages = (current: ChatMessage[], incoming: ChatMessage[]) => {
+        const map = new Map<string, ChatMessage>();
+        for (const m of current) map.set(m.uuid, m);
+        for (const m of incoming) map.set(m.uuid, m);
+        const merged = Array.from(map.values()).sort(
+            (a, b) => +new Date(a.sent_at) - +new Date(b.sent_at),
+        );
+        return merged;
+    };
+
+    const arraysEqualByUuid = (a: ChatMessage[], b: ChatMessage[]) => {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i].uuid !== b[i].uuid) return false;
+        }
+        return true;
+    };
+
+    const loadMessages = async (roomUuid: string, opts?: { soft?: boolean }) => {
+        if (!opts?.soft) setInitialLoading(true);
+        try {
+            const msgs = await fetchRoomMessages(roomUuid);
+            msgs.sort((a, b) => +new Date(a.sent_at) - +new Date(b.sent_at));
+            setLatestMsgTimeByRoom((prev) => ({
+                ...prev,
+                [roomUuid]: msgs.length ? +new Date(msgs[msgs.length - 1].sent_at) : 0,
+            }));
+
+            setLastSeenByRoom((prev) => ({
+                ...prev,
+                [roomUuid]:
+                    prev[roomUuid] ?? (msgs.length ? +new Date(msgs[msgs.length - 1].sent_at) : Date.now()),
+            }));
+
+            setMessages((prev) => {
+                const merged = mergeMessages(prev, msgs);
+                if (arraysEqualByUuid(prev, merged)) return prev;
+                return merged;
+            });
+
+            setUnreadRoomSet((prev) => {
+                const next = new Set(prev);
+                next.delete(roomUuid);
+                return next;
+            });
+        } catch (e) {
+            // logged
+        } finally {
+            if (!opts?.soft) setInitialLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedRoom?.uuid) {
+            setMessages([]);
+            prevMsgCountRef.current = 0;
+            setInitialLoading(true);
+            loadMessages(selectedRoom.uuid, { soft: false }).then(() => {
+                scrollToBottom(false);
+            });
+        } else {
+            setMessages([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedRoom?.uuid]);
+
+    useEffect(() => {
+        if (!selectedRoom?.uuid) return;
+        const id = setInterval(() => {
+            loadMessages(selectedRoom.uuid, { soft: true });
+        }, 4000);
+        return () => clearInterval(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedRoom?.uuid]);
+
+    useEffect(() => {
+        if (rooms.length === 0) return;
+        const id = setInterval(async () => {
+            for (const r of rooms) {
+                if (selectedRoom?.uuid === r.uuid) continue;
+                try {
+                    const msgs = await fetchRoomMessages(r.uuid);
+                    if (!msgs || msgs.length === 0) continue;
+                    msgs.sort((a, b) => +new Date(a.sent_at) - +new Date(b.sent_at));
+                    const latest = +new Date(msgs[msgs.length - 1].sent_at);
+
+                    setLatestMsgTimeByRoom((prev) => {
+                        const next = { ...prev, [r.uuid]: latest };
+                        const lastSeen = lastSeenByRoom[r.uuid] ?? 0;
+                        if (latest > lastSeen) {
+                            setUnreadRoomSet((prevSet) => {
+                                const s = new Set(prevSet);
+                                s.add(r.uuid);
+                                return s;
+                            });
+                        }
+                        return next;
+                    });
+                } catch {
+                }
+            }
+        }, 7000);
+        return () => clearInterval(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rooms, selectedRoom?.uuid, lastSeenByRoom]);
+
+    const handleSelectRoom = (room: ChatRoom) => {
+        setSelectedRoom(room);
+        setUnreadRoomSet((prev) => {
+            const next = new Set(prev);
+            next.delete(room.uuid);
+            return next;
+        });
+        setLastSeenByRoom((prev) => ({ ...prev, [room.uuid]: Date.now() }));
+    };
+
+    const roomReceiverUuid = useMemo(() => {
+        if (!selectedRoom || !meUuid) return null;
+        if (selectedRoom.first_party_uuid === meUuid)
+            return selectedRoom.second_party_uuid;
+        if (selectedRoom.second_party_uuid === meUuid)
+            return selectedRoom.first_party_uuid;
+        return null;
+    }, [selectedRoom, meUuid]);
+
+    const canSendInSelectedRoom = !!roomReceiverUuid && !!meUuid;
+
+    const handleSend = async () => {
+        if (!selectedRoom || !canSendInSelectedRoom || !newMessage.trim() || !meUuid || !roomReceiverUuid) return;
+        const content = newMessage.trim();
+        setNewMessage("");
+        try {
+            const created = await sendMessage(selectedRoom.uuid, {
+                content,
+                sender_uuid: meUuid,
+                receiver_uuid: roomReceiverUuid,
+            });
+            setMessages((prev) => {
+                const next = mergeMessages(prev, [created]);
+                return next;
+            });
+            const createdAt = +new Date(created.sent_at);
+            setLatestMsgTimeByRoom((prev) => ({ ...prev, [selectedRoom.uuid]: createdAt }));
+            setLastSeenByRoom((prev) => ({ ...prev, [selectedRoom.uuid]: createdAt }));
+            scrollToBottom(true);
+        } catch {
+        }
+    };
+
+    const handleCreatedRoom = (room: ChatRoom) => {
+        setRooms((prev) => {
+            const exists = prev.some((r) => r.uuid === room.uuid);
+            const next = exists ? prev : [room, ...prev];
+            return next;
+        });
+        setSelectedRoom(room);
+        setUnreadRoomSet((prev) => {
+            const next = new Set(prev);
+            next.delete(room.uuid);
+            return next;
+        });
+        setLastSeenByRoom((prev) => ({ ...prev, [room.uuid]: Date.now() }));
+    };
+
+    const isAdminViewerOfForeignRoom =
+        role === "admin" &&
+        selectedRoom != null &&
+        meUuid &&
+        selectedRoom.first_party_uuid !== meUuid &&
+        selectedRoom.second_party_uuid !== meUuid;
+
+    return (
+        <div className="flex border rounded-lg shadow h-[600px] bg-white">
+            <div className="w-1/3 border-r p-2 bg-gray-50 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold">Discussions</h3>
+                    {canCreateConversation && (
+                        <button
+                            onClick={() => setCreatingConversation(true)}
+                            className="text-sm px-2 py-1 rounded bg-green-500 text-white"
+                        >
+                            New
+                        </button>
+                    )}
+                </div>
+
+                {loadingRooms || loadingUsers || !me ? (
+                    <div className="text-gray-500 p-2">Loading...</div>
+                ) : rooms.length === 0 ? (
+                    <div className="text-gray-500 p-2">
+                        {canCreateConversation
+                            ? "No conversations yet. Create one!"
+                            : "No conversations available."}
+                    </div>
+                ) : (
+                    <div className="space-y-1 overflow-y-auto">
+                        {rooms.map((r) => (
+                            <RoomListItem
+                                key={r.uuid}
+                                room={r}
+                                meUuid={meUuid}
+                                usersById={usersById}
+                                selected={!!selectedRoom && selectedRoom.uuid === r.uuid}
+                                onClick={() => handleSelectRoom(r)}
+                                isAdminViewer={role === "admin"}
+                                unread={unreadRoomSet.has(r.uuid)}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="flex-1 flex flex-col">
+                <div className="p-3 border-b bg-gray-100 font-semibold">
+                    {selectedRoom ? (
+                        (() => {
+                            const meIsParty =
+                                selectedRoom.first_party_uuid === meUuid ||
+                                selectedRoom.second_party_uuid === meUuid;
+                            if (meIsParty) {
+                                const otherUuid =
+                                    selectedRoom.first_party_uuid === meUuid
+                                        ? selectedRoom.second_party_uuid
+                                        : selectedRoom.first_party_uuid;
+                                const other = usersById[otherUuid];
+                                return other ? other.name : "Conversation";
+                            } else if (role === "admin") {
+                                const u1 =
+                                    usersById[selectedRoom.first_party_uuid]?.name ??
+                                    selectedRoom.first_party_uuid;
+                                const u2 =
+                                    usersById[selectedRoom.second_party_uuid]?.name ??
+                                    selectedRoom.second_party_uuid;
+                                return `${u1} ↔ ${u2}`;
+                            } else {
+                                return "Conversation";
+                            }
+                        })()
+                    ) : (
+                        "Select a conversation"
+                    )}
+                </div>
+
+                <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                    {selectedRoom ? (
+                        initialLoading && messages.length === 0 ? (
+                            <div className="text-gray-500">Loading messages...</div>
+                        ) : messages.length === 0 ? (
+                            <div className="text-gray-500">No messages yet.</div>
+                        ) : (
+                            <>
+                                {messages.map((m) => (
+                                    <MessageBubble key={m.uuid} msg={m} isMe={m.sender_uuid === meUuid} />
+                                ))}
+                                <div ref={messagesEndRef} />
+                            </>
+                        )
+                    ) : (
+                        <div className="text-gray-500">Choose a conversation to view messages.</div>
+                    )}
+                </div>
+
+                <div className="flex border-t p-2 gap-2">
+                    <input
+                        type="text"
+                        placeholder={
+                            selectedRoom
+                                ? isAdminViewerOfForeignRoom
+                                    ? "You are not a participant of this room"
+                                    : "Type your message..."
+                                : "Select a conversation..."
+                        }
+                        className="flex-1 border rounded-lg px-3 py-2"
+                        disabled={!selectedRoom || !canSendInSelectedRoom || !!isAdminViewerOfForeignRoom}
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSend();
+                        }}
+                    />
+                    <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                        onClick={handleSend}
+                        disabled={!selectedRoom || !canSendInSelectedRoom || !!isAdminViewerOfForeignRoom || !newMessage.trim()}
+                    >
+                        Send
+                    </button>
+                </div>
+            </div>
+
+            <NewConversationModal
+                open={creatingConversation}
+                onClose={() => setCreatingConversation(false)}
+                currentUser={me}
+                role={(role as User["role"]) || "investor"}
+                onCreated={handleCreatedRoom}
+            />
+        </div>
+    );
 }
 
 export function StatisticsPage() {
@@ -2313,7 +2876,6 @@ export function StatisticsPage() {
             <h2 className="text-2xl font-bold mb-8 text-gray-800">Platform Statistics</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Total Startups Card */}
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg p-6 transform hover:scale-101 transition-transform duration-300">
                     <div className="flex items-center justify-between">
                         <div>
@@ -2327,7 +2889,6 @@ export function StatisticsPage() {
                     </div>
                 </div>
 
-                {/* Total Views Card */}
                 <div className="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl shadow-lg p-6 transform hover:scale-101 transition-transform duration-300">
                     <div className="flex items-center justify-between">
                         <div>
