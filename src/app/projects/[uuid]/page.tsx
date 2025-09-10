@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import NavBar from "@/components/layout/NavBar";
 import "../../globals.css";
 
-import { getProjectByUuid, ProjectDetail } from "@/lib/projects";
+import {getPitchDeck, getProjectByUuid, ProjectDetail, upProjectStats} from "@/lib/projects";
 import { apiClient } from "@/lib/api";
 
 import Image from "next/image";
@@ -17,37 +17,51 @@ export default function ProjectDetailPage() {
 
     useEffect(() => {
         const fetchProject = async () => {
-            if (params.uuid && typeof params.uuid === 'string') {
+            if (params.uuid && typeof params.uuid === "string") {
                 const projectData = await getProjectByUuid(params.uuid);
                 if (projectData?.founders) {
-                    const founderWithImage = await Promise.all(projectData?.founders.map(async (founder) => {
-                        try {
-                            const user: User = await apiClient.get(`/users/founderUUID/${founder.uuid}`)
-                            console.log(`User uuid = ${user.uuid} for ${founder.name}`)
-                            const response = await apiClient.getImage(`/users/${user.uuid}/picture`)
-                            const blob = await response.blob()
-                            const base64String = await new Promise<string>((resolve) => {
-                                const reader = new FileReader()
-                                reader.onloadend = () => resolve(reader.result as string)
-                                reader.readAsDataURL(blob)
-                            })
+                    const founderWithImage = await Promise.all(
+                        projectData?.founders.map(async (founder) => {
+                            try {
+                                const user: User = await apiClient.get(
+                                    `/users/founderUUID/${founder.uuid}`
+                                );
+                                console.log(`User uuid = ${user.uuid} for ${founder.name}`);
+                                const response = await apiClient.getImage(
+                                    `/users/${user.uuid}/picture`
+                                );
+                                const blob = await response.blob();
+                                const base64String = await new Promise<string>((resolve) => {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => resolve(reader.result as string);
+                                    reader.readAsDataURL(blob);
+                                });
 
-                            founder.image = base64String
-                            return founder
-                        } catch {
-                            console.error(`Unable to get founder ${founder.uuid} picture`)
-                            founder.image = "/logo.png"
-                            return founder
-                        }
-                    }))
-                    projectData.founders = founderWithImage
+                                founder.image = base64String;
+                                return founder;
+                            } catch {
+                                console.error(`Unable to get founder ${founder.uuid} picture`);
+                                founder.image = "/logo.png";
+                                return founder;
+                            }
+                        })
+                    );
+                    projectData.founders = founderWithImage;
                 }
+
                 setProject(projectData);
+                if (projectData?.uuid) {
+                    try {
+                        await upProjectStats(projectData.uuid);
+                    } catch (err) {
+                        console.error("Failed to update project stats:", err);
+                    }
+                }
             }
         };
 
         fetchProject();
-    }, []);
+    }, [params.uuid]);
 
     if (!project) {
         return (
@@ -80,7 +94,22 @@ export default function ProjectDetailPage() {
                     )}
 
                     <div className="p-8">
-                        <h1 className="text-4xl font-bold mb-4">{project.name}</h1>
+                        <div className="flex justify-between items-center mb-4">
+                            <h1 className="text-4xl font-bold">{project.name}</h1>
+
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await getPitchDeck(project?.uuid);
+                                    } catch (err) {
+                                        alert("❌ No pitch deck is available for this project.");
+                                    }
+                                }}
+                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
+                            >
+                                📄 Download pitch deck
+                            </button>
+                        </div>
 
                         {project.description && (
                             <p className="text-lg text-gray-700 mb-6">

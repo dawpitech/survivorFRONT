@@ -18,7 +18,7 @@ import {
   Investor,
 } from "@/lib/user";
 
-import {getProjects, ProjectDetail, updateProject} from "@/lib/projects";
+import {getProjects, ProjectDetail, updatePitchDeck, updateProject} from "@/lib/projects";
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 
@@ -1924,8 +1924,9 @@ export function ProjectModal({
   const [edited, setEdited] = useState<ProjectDetail>(project);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pitchDeckInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -2154,6 +2155,37 @@ export function ProjectModal({
               onChange={handleFileChange}
             />
           </div>
+
+            <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pitch Deck (PDF)
+                </label>
+                <div className="flex flex-col items-center gap-2">
+                    <button
+                        onClick={() => pitchDeckInputRef.current?.click()}
+                        className="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded-lg"
+                    >
+                        Upload / Overwrite Pitch Deck
+                    </button>
+                    <input
+                        type="file"
+                        accept="application/pdf"
+                        ref={pitchDeckInputRef}
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                                await updatePitchDeck(edited.uuid, file);
+                                alert("✅ Pitch deck updated successfully!");
+                            } catch {
+                                alert("❌ Failed to update pitch deck. Make sure it is a PDF file.");
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+
         </div>
 
         <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
