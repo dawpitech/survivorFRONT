@@ -22,7 +22,7 @@ import {getProjects, ProjectDetail, updatePitchDeck, updateProject} from "@/lib/
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 
-type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news";
+type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news" | "stats";
 
 export default function DashboardPage() {
   const [activePage, setActivePage] = useState<Page>("messages");
@@ -60,6 +60,9 @@ export default function DashboardPage() {
                                 <SidebarButton page="news" activePage={activePage} setActivePage={setActivePage}>
                                     Manage News
                                 </SidebarButton>
+                                <SidebarButton page="stats" activePage={activePage} setActivePage={setActivePage}>
+                                    Statistics
+                                </SidebarButton>
                             </>
                         )}
                         {userRole === "founder" && (
@@ -92,6 +95,7 @@ export default function DashboardPage() {
                     {activePage === "messages" && <MessagesPage />}
                     {activePage === "my-startup" && <MyStartupPage />}
                     {activePage === "investor-infos" && <InvestorInfosPage />}
+                    {activePage === "stats" && <StatisticsPage />}
                 </section>
             </main>
         </>
@@ -2266,4 +2270,78 @@ function MessagesPage() {
       </div>
     </div>
   );
+}
+
+export function StatisticsPage() {
+    const [totalStartups, setTotalStartups] = useState(0);
+    const [totalViews, setTotalViews] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const projects = await getProjects();
+                if (!projects) {
+                    console.error("Failed to load statistics");
+                    return;
+                }
+
+                setTotalStartups(projects.length);
+                const views = projects.reduce((sum, project: ProjectDetail) => {
+                    return sum + (project.views_count || 0);
+                }, 0);
+                setTotalViews(views);
+            } catch (err) {
+                console.error("An error occurred while loading statistics");
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-lg animate-pulse">Loading statistics...</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-6">
+            <h2 className="text-2xl font-bold mb-8 text-gray-800">Platform Statistics</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Total Startups Card */}
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg p-6 transform hover:scale-101 transition-transform duration-300">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold">Total Startups</h3>
+                            <p className="text-4xl font-bold mt-2">{totalStartups}</p>
+                            <p className="text-sm opacity-80 mt-1">Active startups on the platform</p>
+                        </div>
+                        <svg className="w-12 h-12 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2-5v5m14-5v5M9 8h6m-3 4h3" />
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Total Views Card */}
+                <div className="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl shadow-lg p-6 transform hover:scale-101 transition-transform duration-300">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold">Total Project Views</h3>
+                            <p className="text-4xl font-bold mt-2">{totalViews}</p>
+                            <p className="text-sm opacity-80 mt-1">Cumulative views across all projects</p>
+                        </div>
+                        <svg className="w-12 h-12 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
