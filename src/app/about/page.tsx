@@ -14,8 +14,9 @@ export default function AboutPage() {
                         About JEB Incubator ©
                     </p>
 
-                    <div className="flex flex-col md:flex-row items-center md:items-start md:space-x-8 my-6">
-                        <p className="flex-2 text-justify mb-6 md:mb-0">
+                    <div className="flex flex-col md:flex-row items-center md:items-start gap-4 my-6 w-full max-w-6xl">
+                        {/* Text block */}
+                        <p className="flex-2 text-justify md:flex-1">
                             JEB Incubator is more than just a place where startups grow, it is
                             a dynamic ecosystem designed to nurture innovation, ambition, and
                             collaboration. We bring together visionary entrepreneurs,
@@ -42,11 +43,12 @@ export default function AboutPage() {
                             built.
                         </p>
 
-                        <div className="flex-1 flex justify-center">
+                        {/* Image block */}
+                        <div className="flex justify-center md:flex-shrink-0 md:w-1/3">
                             <img
                                 src="/logo.png"
                                 alt="logo"
-                                className="w-40 h-auto md:w-64"
+                                className="w-36 h-auto md:w-56 lg:w-64"
                             />
                         </div>
                     </div>
