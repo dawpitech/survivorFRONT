@@ -35,7 +35,7 @@ export default function NewsPage() {
                 const response: News[] = await apiClient.get("/news/")
                 const newsWithPicture = await Promise.all(
                     response.map(async (value: News) => {
-                        const picture = await apiClient.getImage(`/news/${value.uuid}/picture/`)
+                        const picture = await apiClient.getImage(`/news/${value.uuid}/picture`)
                         const blob = await picture.blob()
                         const base64String = await new Promise<string>((resolve) => {
                             const reader = new FileReader()
