@@ -5,6 +5,9 @@ import React from 'react'
 import { apiClient } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+import ReactMarkdown from 'react-markdown'
+
+
 export interface News {
     uuid?: string,
     id?: number,

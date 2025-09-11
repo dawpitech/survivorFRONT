@@ -1,11 +1,13 @@
 "use client";
 
-import {Swiper, SwiperSlide} from "swiper/react";
-import {Navigation, Autoplay} from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
-import {NewsProps} from "@/app/news/page";
+import { NewsProps } from "@/app/news/page";
+
+import ReactMarkdown from 'react-markdown'
 
 export default function NewsCarousel({ news, onClick }: NewsProps) {
 
@@ -16,7 +18,7 @@ export default function NewsCarousel({ news, onClick }: NewsProps) {
                     modules={[Navigation, Autoplay]}
                     navigation
                     spaceBetween={50}
-                    autoplay={{delay: 7000, disableOnInteraction: false}}
+                    autoplay={{ delay: 7000, disableOnInteraction: false }}
                     loop
                     className="h-96"
                     style={{ '--swiper-navigation-color': 'black' } as React.CSSProperties}
@@ -26,7 +28,11 @@ export default function NewsCarousel({ news, onClick }: NewsProps) {
                             <div className="flex flex-col md:flex-row items-stretch bg-gray-100 h-full">
                                 <div className="md:w-2/5 w-full bg-[#0077B6] bg-opacity-70 p-6 flex flex-col justify-center h-full">
                                     <h2 className="ml-6 mb-1.5 text-xl font-bold">{newsIndex.title}</h2>
-                                    <p className="ml-6 mb-4 line-clamp-3 overflow-hidden">{newsIndex.description}</p>
+                                    <div className="line-clamp-3">
+                                        <ReactMarkdown>
+                                            {newsIndex.description}
+                                        </ReactMarkdown>
+                                    </div>
                                     <button className="ml-6 bg-black text-white px-4 py-2 rounded self-start" onClick={() => onClick(newsIndex)}>
                                         Learn More
                                     </button>

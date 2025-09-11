@@ -7,6 +7,8 @@ import "../../globals.css";
 import { News } from "../page";
 import { apiClient } from "@/lib/api";
 
+import ReactMarkdown from 'react-markdown'
+
 export async function getNewsByUuid(uuid: string): Promise<News | null> {
   try {
     const response: News = await apiClient.get(`/news/${uuid}`);
@@ -75,7 +77,7 @@ export default function NewsDetailPage() {
             <h1 className="text-4xl font-bold mb-4">{news.title}</h1>
 
             {news.description && (
-              <p className="text-lg text-gray-700 mb-6">{news.description}</p>
+              <ReactMarkdown>{news.description}</ReactMarkdown>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
