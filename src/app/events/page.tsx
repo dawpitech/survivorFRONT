@@ -32,7 +32,7 @@ export default function EventsPage() {
 
             <section className="flex gap-8 items-start">
                 <div className="flex-1">
-                    <Image src="/events.png" alt="Call to action" className="flex-1" />
+                    <Image src="/events.png" alt="Call to action" className="flex-1" fill/>
                 </div>
 
                 <div className="flex-1 space-y-4">

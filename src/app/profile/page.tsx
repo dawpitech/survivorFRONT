@@ -112,6 +112,7 @@ const ProfileCard: FC = () => {
                   src={profilePic}
                   alt="Profile"
                   className="w-full h-full object-cover"
+                  fill
                 />
               ) : (
                 <span className="text-gray-500 text-3xl">👤</span>

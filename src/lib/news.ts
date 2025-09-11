@@ -31,7 +31,7 @@ export async function fetchNews(): Promise<News[]> {
 export async function editNews(id: string, updatedNews: Partial<News>): Promise<News> {
     try {
         const { uuid, picture, ...dataToSend } = updatedNews;
-        return await apiClient.patch(`/news/${id}`, JSON.stringify((dataToSend)));
+        return await apiClient.patch(`/news/${id}/`, JSON.stringify((dataToSend)));
     } catch (error) {
         console.error("Failed to patch news:", error);
         throw error;

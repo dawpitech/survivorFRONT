@@ -2158,6 +2158,7 @@ export function ProjectModal({
                 src={edited.image}
                 alt="Preview"
                 className="w-full h-32 object-cover rounded mb-2"
+                fill
               />
             )}
             <button

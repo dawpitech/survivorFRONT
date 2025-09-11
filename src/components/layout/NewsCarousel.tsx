@@ -33,11 +33,12 @@ export default function NewsCarousel({ news, onClick }: NewsProps) {
                                     </button>
                                 </div>
 
-                                <div className="md:w-3/5 w-full h-full">
+                                <div className="md:w-3/5 w-full h-full relative">
                                     <Image
                                         src={newsIndex.image ?? ""}
                                         alt={newsIndex.title ?? ""}
                                         className="w-full h-full object-fill"
+                                        fill
                                     />
                                 </div>
                             </div>

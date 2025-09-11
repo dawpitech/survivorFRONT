@@ -76,11 +76,12 @@ export default function NavBar() {
         className={`fixed top-0 left-0 bg-[#023E8A] w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}
       >
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-        <a href="/" className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2 relative">
           <Image
             src="/logo.png"
             alt="logo"
             className={`h-20 ${isScrolled ? "invert opacity-80" : ""}`}
+            fill
           />
         </a>
 
@@ -120,6 +121,7 @@ export default function NavBar() {
                                 src={profilePic}
                                 alt="Profile"
                                 className="w-10 h-10 rounded-full object-cover"
+                                fill
                             />
                         ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
