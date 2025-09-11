@@ -53,7 +53,6 @@ export default function Home() {
                 className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
                 onClick={() => handleProjectClick(proj.uuid)}
               >
-                <img src={proj.image} alt={proj.name} />
                 <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
                 <p>{proj.description}</p>
               </article>
