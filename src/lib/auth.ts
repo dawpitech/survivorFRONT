@@ -24,6 +24,7 @@ export async function handleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
 
     } catch (err) {
         console.error("Login failed:", err);
+        alert("Login failed: Check you email and password !")
     }
 }
 
@@ -43,5 +44,6 @@ export async function handleSubmitSignUp(e: React.FormEvent<HTMLFormElement>) {
 
     } catch (err) {
         console.error("Sign-up failed:", err);
+        alert("Sign Up failed: contact your administrator !")
     }
 }
