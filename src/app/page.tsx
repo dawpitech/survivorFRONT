@@ -4,6 +4,7 @@ import "./globals.css";
 import { useState, useEffect } from "react";
 import { getProjects, ProjectDetail } from "@/lib/projects";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function Home() {
                 className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
                 onClick={() => handleProjectClick(proj.uuid)}
               >
-                <img src={proj.image} alt={proj.name} />
+                <Image src={proj.image ?? ""} alt={proj.name} />
                 <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
                 <p>{proj.description}</p>
               </article>

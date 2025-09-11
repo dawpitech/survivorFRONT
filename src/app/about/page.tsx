@@ -38,7 +38,7 @@ export default function AboutPage() {
               built.
             </p>
             <p className="flex-1">
-              <img src="/logo.png" alt="logo" />
+              <Image src="/logo.png" alt="logo" />
             </p>
           </div>
           <a className="text-xl" href="/contact">
