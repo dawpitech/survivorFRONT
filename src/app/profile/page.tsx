@@ -10,6 +10,7 @@ import { updateUserInformation } from "@/lib/user";
 
 import { FC, useEffect, useState } from "react";
 import { X, Pencil } from "lucide-react";
+import Image from "next/image";
 
 export type User = {
   uuid: string;
@@ -107,7 +108,7 @@ const ProfileCard: FC = () => {
           <div className="relative">
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
               {profilePic ? (
-                <img
+                <Image
                   src={profilePic}
                   alt="Profile"
                   className="w-full h-full object-cover"
@@ -249,4 +250,3 @@ export default function ProfilePage() {
     </>
   );
 }
-

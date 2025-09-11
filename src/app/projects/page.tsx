@@ -7,12 +7,6 @@ import { getProjects, ProjectDetail } from "@/lib/projects";
 import { useRouter } from "next/navigation";
 import { SimpleListMaturity } from "@/components/layout/projectFilter";
 import SimpleListSector from "@/components/layout/projectFilter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function ProjectPage() {
   const router = useRouter();
@@ -100,9 +94,9 @@ export default function ProjectPage() {
                 className="border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 bg-white cursor-pointer"
                 onClick={() => handleProjectClick(proj.uuid)}
               >
-                <img src={proj.image} alt={proj.name} />
                 <h3 className="mt-[1rem] font-bold text-lg">{proj.name}</h3>
-                <p>{proj.description}</p>
+                <p className="text-lg"> {proj.description} </p>
+                <p>{proj.address?.split(" ").pop()}</p>
               </article>
             ))}
           </div>

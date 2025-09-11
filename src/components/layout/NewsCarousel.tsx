@@ -6,6 +6,7 @@ import {Navigation, Autoplay} from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import {NewsProps} from "@/app/news/page";
+import Image from "next/image";
 
 export default function NewsCarousel({ news, onClick }: NewsProps) {
 
@@ -33,9 +34,9 @@ export default function NewsCarousel({ news, onClick }: NewsProps) {
                                 </div>
 
                                 <div className="md:w-3/5 w-full h-full">
-                                    <img
-                                        src={newsIndex.image}
-                                        alt={newsIndex.title}
+                                    <Image
+                                        src={newsIndex.image ?? ""}
+                                        alt={newsIndex.title ?? ""}
                                         className="w-full h-full object-fill"
                                     />
                                 </div>
