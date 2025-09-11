@@ -85,7 +85,7 @@ export default function ProjectDetailPage() {
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                     {project.image && (
                         <div className="h-64 bg-gray-200">
-                            <Image
+                            <img
                                 src={project.image}
                                 alt={project.name}
                                 className="w-full h-full object-cover"

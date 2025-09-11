@@ -6,7 +6,6 @@ import NavBar from "@/components/layout/NavBar";
 import "../../globals.css";
 import { News } from "../page";
 import { apiClient } from "@/lib/api";
-import Image from "next/image";
 
 export async function getNewsByUuid(uuid: string): Promise<News | null> {
   try {
@@ -64,9 +63,9 @@ export default function NewsDetailPage() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {news.image && (
             <div className="h-64 bg-gray-200">
-              <Image
+              <img
                 src={news.image}
-                alt={news.title ?? "news Title"}
+                alt={news.title}
                 className="w-full h-full object-cover"
               />
             </div>

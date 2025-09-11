@@ -22,7 +22,6 @@ import {getProjects, ProjectDetail, updatePitchDeck, updateProject} from "@/lib/
 import {createEvent, editEvent, Events, fetchEvents} from "@/lib/events";
 import {createNews, editNews, fetchNews, getNewsPicture, News, updateNewsPicture} from "@/lib/news";
 import {ChatMessage, ChatRoom, createRoom, fetchRoomMessages, fetchRooms, sendMessage} from "@/lib/chat";
-import Image from "next/image";
 
 type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news" | "stats";
 
@@ -195,7 +194,7 @@ function CreateNewsModal({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Picture (PNG only) *</label>
                 <div className="flex flex-col items-center mb-4">
                     {preview ? (
-                        <Image
+                        <img
                             src={preview}
                             alt="Preview"
                             className="w-full h-32 object-cover rounded mb-2"
@@ -453,7 +452,7 @@ export function ManageNews() {
                 {sortedNews.map((newsItem) => (
                     <div key={newsItem.uuid} className="border rounded-lg p-4 shadow bg-white">
                         {pictures[newsItem.uuid] ? (
-                            <Image
+                            <img
                                 src={pictures[newsItem.uuid]}
                                 alt="News"
                                 className="w-full h-32 object-cover rounded mb-2"
@@ -590,7 +589,7 @@ function EditNewsModal({
                             Loading...
                         </div>
                     ) : picture ? (
-                        <Image
+                        <img
                             src={picture}
                             alt="News"
                             className="w-full h-32 object-cover rounded mb-2"
@@ -1667,7 +1666,7 @@ function UserModal({
           {loadingPic ? (
             <div className="w-20 h-20 rounded-full bg-gray-200 animate-pulse mb-2" />
           ) : (
-            <Image
+            <img
               src={profilePic || profilePicDefault}
               alt="Profile"
               className="w-20 h-20 rounded-full mb-2 object-cover"
@@ -2154,7 +2153,7 @@ export function ProjectModal({
           </label>
           <div className="flex flex-col items-center">
             {edited.image && (
-              <Image
+              <img
                 src={edited.image}
                 alt="Preview"
                 className="w-full h-32 object-cover rounded mb-2"

@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {getUserProfilePicture, handleLogout} from "@/lib/user";
-import Image from "next/image";
 
 export default function NavBar() {
   const navLinks = [
@@ -77,7 +76,7 @@ export default function NavBar() {
       >
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" className="flex items-center gap-2">
-          <Image
+          <img
             src="/logo.png"
             alt="logo"
             className={`h-20 ${isScrolled ? "invert opacity-80" : ""}`}
@@ -116,7 +115,7 @@ export default function NavBar() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         {profilePic ? (
-                            <Image
+                            <img
                                 src={profilePic}
                                 alt="Profile"
                                 className="w-10 h-10 rounded-full object-cover"

@@ -1,7 +1,6 @@
 "use client"
 import React from 'react'
 import {fetchEvents, Events} from '@/lib/events'
-import Image from 'next/image'
 
 export default function EventsPage() {
     const [events, setEvents] = React.useState<Events[]>([])
@@ -32,7 +31,7 @@ export default function EventsPage() {
 
             <section className="flex gap-8 items-start">
                 <div className="flex-1">
-                    <Image src="/events.png" alt="Call to action" className="flex-1" />
+                    <img src="/events.png" alt="Call to action" className="flex-1" />
                 </div>
 
                 <div className="flex-1 space-y-4">
