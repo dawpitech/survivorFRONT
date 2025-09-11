@@ -21,7 +21,7 @@ export default function RecentNews({ news }: NewsProps) {
         <section className="max-w-6xl mx-auto px-4 py-8">
             <header className="mb-8">
                 <h1 className="text-3xl md:text-4xl font-bold text-gray-900 text-center">
-                    Our last News
+                    Our Latest News
                 </h1>
             </header>
 
