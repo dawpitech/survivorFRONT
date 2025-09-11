@@ -25,26 +25,13 @@ import {ChatMessage, ChatRoom, createRoom, fetchRoomMessages, fetchRooms, sendMe
 
 type Page = "projects" | "users" | "messages" | "my-startup" | "investor-infos" | "events" | "news" | "stats";
 
-const __prefetchUserInfo = (async () => {
-    try {
-        const user = await getUserInformation();
-        if (user === "" || !user) {
-            window.location.href = "/";
-        }
-        return user;
-    } catch {
-        window.location.href = "/";
-        return "";
-    }
-})();
-
 export default function DashboardPage() {
     const [activePage, setActivePage] = useState<Page>("messages");
     const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchUser() {
-            const user = await __prefetchUserInfo;
+            const user = await getUserInformation();
             if (user == "") return;
             if (user?.role) {
                 setUserRole(user.role);

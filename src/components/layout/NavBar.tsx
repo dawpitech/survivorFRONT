@@ -179,13 +179,36 @@ export default function NavBar() {
               {link.name}
             </a>
           ))}
-          {!isLogin ? (
-            <LoginModal text="Sign in" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-500 text-xl">👤</span>
-            </div>
-          )}
+
+            {!isLogin ? (
+                <LoginModal text="Sign in" />
+            ) : (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        {profilePic ? (
+                            <img
+                                src={profilePic}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-gray-500 text-xl">👤</span>
+                            </div>
+                        )}
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuItem onSelect={() => (window.location.href = "/profile")}>
+                            Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => (window.location.href = "/dashboard")}>
+                            Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleLogout}>Logout</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
         </div>
       </nav>
     </div>

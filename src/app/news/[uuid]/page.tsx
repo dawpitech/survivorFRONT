@@ -10,7 +10,7 @@ import { apiClient } from "@/lib/api";
 export async function getNewsByUuid(uuid: string): Promise<News | null> {
   try {
     const response: News = await apiClient.get(`/news/${uuid}`);
-    const picture = await apiClient.getImage(`/news/${uuid}/picture/`);
+    const picture = await apiClient.getImage(`/news/${uuid}/picture`);
     const blob = await picture.blob();
     const base64String = await new Promise<string>((resolve) => {
       const reader = new FileReader();
