@@ -1,7 +1,9 @@
 "use client";
-import {News, NewsProps} from "@/app/news/page";
+import { News, NewsProps } from "@/app/news/page";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+
+import ReactMarkdown from 'react-markdown'
 
 export default function RecentNews({ news }: NewsProps) {
     const router = useRouter()
@@ -38,9 +40,11 @@ export default function RecentNews({ news }: NewsProps) {
                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                             {recentNews[0].title}
                         </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">
-                            {recentNews[0].description}
-                        </p>
+                        <div className="line-clamp-4">
+                            <ReactMarkdown>
+                                {recentNews[0].description}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 </article>
 
@@ -58,9 +62,11 @@ export default function RecentNews({ news }: NewsProps) {
                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                             {recentNews[1].title}
                         </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">
-                            {recentNews[1].description}
-                        </p>
+                        <div className="line-clamp-4">
+                            <ReactMarkdown>
+                                {recentNews[1].description}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 </article>
 
@@ -78,9 +84,11 @@ export default function RecentNews({ news }: NewsProps) {
                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                             {recentNews[2].title}
                         </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">
-                            {recentNews[2].description}
-                        </p>
+                        <div className="line-clamp-4">
+                            <ReactMarkdown>
+                                {recentNews[2].description}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 </article>
             </div>
